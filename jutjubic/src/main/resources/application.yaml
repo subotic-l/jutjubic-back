@@ -15,5 +15,28 @@ spring:
         hibernate:
           format_sql: true
 
+  # Email konfiguracija
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: jutjubicisa@gmail.com
+    password: edqu lsoc jhaz cwde 
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# JWT konfiguracija
+jwt:
+  secret: JutjubicSecretKeyForJWTTokenGenerationAndValidation2025IsaProjekat
+  expiration: 86400  # 24 sata u sekundama
+
+# App URLs
+app:
+  backend:
+    url: https://astronautically-heathered-nestor.ngrok-free.dev
+
 server:
   port: 8080
