@@ -90,7 +90,9 @@ public class VideoPostService {
                 .toList();
     }
 
+    @Transactional
     public VideoPostResponse getVideoById(Long id) {
+        videoPostRepository.incrementViews(id);
         VideoPost videoPost = videoPostRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
         return mapToResponse(videoPost);
@@ -105,6 +107,7 @@ public class VideoPostService {
                 videoPost.getVideoUrl(),
                 videoPost.getThumbnailPath(),
                 videoPost.getCreatedAt(),
+                videoPost.getViews(),
                 videoPost.getLocation(),
                 videoPost.getUser().getActualUsername()
         );

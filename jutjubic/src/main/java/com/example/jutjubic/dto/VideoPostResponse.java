@@ -20,6 +20,7 @@ public class VideoPostResponse {
     private String videoUrl;
     private String thumbnailPath;
     private LocalDateTime createdAt;
+    private Long views;
     private String location;
     private String username;
 }

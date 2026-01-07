@@ -37,6 +37,9 @@ public class VideoPost {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private Long views = 0L;
+
     private String location;
 
     @ManyToOne(fetch = FetchType.LAZY)
