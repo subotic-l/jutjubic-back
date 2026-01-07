@@ -28,6 +28,11 @@ spring:
           starttls:
             enable: true
 
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 210MB
+
 # JWT konfiguracija
 jwt:
   secret: JutjubicSecretKeyForJWTTokenGenerationAndValidation2025IsaProjekat
