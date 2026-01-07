@@ -63,8 +63,6 @@ public class VideoPostService {
             uploadFile(request.getThumbnail(), thumbnailPath);
         } catch (IOException e) {
             // Rolling back DB is automatic because of @Transactional
-            // But we should clean up any partially uploaded files if necessary
-            // In a real scenario, we might want more complex logic here.
             throw new IOException("Failed to upload files, rolling back...", e);
         }
 
@@ -85,6 +83,19 @@ public class VideoPostService {
         return Files.readAllBytes(Paths.get(thumbnailPath));
     }
 
+    public java.util.List<VideoPostResponse> getAllVideos() {
+        return videoPostRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public VideoPostResponse getVideoById(Long id) {
+        VideoPost videoPost = videoPostRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
+        return mapToResponse(videoPost);
+    }
+
     private VideoPostResponse mapToResponse(VideoPost videoPost) {
         return new VideoPostResponse(
                 videoPost.getId(),
@@ -95,7 +106,7 @@ public class VideoPostService {
                 videoPost.getThumbnailPath(),
                 videoPost.getCreatedAt(),
                 videoPost.getLocation(),
-                videoPost.getUser().getUsername()
+                videoPost.getUser().getActualUsername()
         );
     }
 }
