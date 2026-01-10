@@ -83,6 +83,14 @@ public class VideoPostService {
         return Files.readAllBytes(Paths.get(thumbnailPath));
     }
 
+    public byte[] getVideo(String videoPath) throws IOException {
+        Path path = Paths.get(videoPath);
+        if (!Files.exists(path)) {
+            throw new IOException("Video file not found: " + videoPath);
+        }
+        return Files.readAllBytes(path);
+    }
+
     public java.util.List<VideoPostResponse> getAllVideos() {
         return videoPostRepository.findAll()
                 .stream()

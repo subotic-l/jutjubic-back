@@ -28,7 +28,7 @@ public class VideoPostController {
         return ResponseEntity.ok(videoPostService.getAllVideos());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ResponseEntity<VideoPostResponse> getVideoById(@PathVariable Long id) {
         return ResponseEntity.ok(videoPostService.getVideoById(id));
     }
@@ -61,6 +61,28 @@ public class VideoPostController {
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(thumbnail);
+        } catch (IOException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/videos/{videoPath:.+}")
+    public ResponseEntity<byte[]> getVideo(@PathVariable String videoPath) {
+        try {
+            byte[] video = videoPostService.getVideo("uploads/videos/" + videoPath);
+            
+            String contentType = "video/mp4";
+            if (videoPath.toLowerCase().endsWith(".webm")) {
+                contentType = "video/webm";
+            } else if (videoPath.toLowerCase().endsWith(".ogg")) {
+                contentType = "video/ogg";
+            } else if (videoPath.toLowerCase().endsWith(".avi")) {
+                contentType = "video/x-msvideo";
+            }
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(video);
         } catch (IOException e) {
             return ResponseEntity.notFound().build();
         }
