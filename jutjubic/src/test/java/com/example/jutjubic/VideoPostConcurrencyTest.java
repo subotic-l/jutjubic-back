@@ -46,8 +46,8 @@ public class VideoPostConcurrencyTest {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
                 User user = new User();
-                user.setEmail("test@example.com");
-                user.setUsername("testuser");
+                user.setEmail("test_" + System.currentTimeMillis() + "@example.com");
+                user.setUsername("testuser_" + System.currentTimeMillis());
                 user.setPassword("password");
                 user.setFirstName("Test");
                 user.setLastName("User");

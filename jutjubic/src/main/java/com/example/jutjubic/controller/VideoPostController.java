@@ -46,6 +46,14 @@ public class VideoPostController {
         }
     }
 
+    @PostMapping("/{id}/like")
+    public ResponseEntity<Void> toggleLike(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userService.findByEmail(email);
+        videoPostService.toggleLike(id, user);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/thumbnails/{thumbnailPath:.+}")
     public ResponseEntity<byte[]> getThumbnail(@PathVariable String thumbnailPath) {
         try {

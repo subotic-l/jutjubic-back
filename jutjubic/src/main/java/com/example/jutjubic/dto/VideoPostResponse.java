@@ -21,6 +21,8 @@ public class VideoPostResponse {
     private String thumbnailPath;
     private LocalDateTime createdAt;
     private Long views;
+    private Long likes;
     private String location;
     private String username;
+    private boolean likedByCurrentUser;
 }

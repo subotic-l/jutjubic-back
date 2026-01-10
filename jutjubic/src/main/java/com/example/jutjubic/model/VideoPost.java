@@ -40,6 +40,9 @@ public class VideoPost {
     @Column(nullable = false)
     private Long views = 0L;
 
+    @Column(nullable = false)
+    private Long likes = 0L;
+
     private String location;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,4 +53,7 @@ public class VideoPost {
     @CollectionTable(name = "video_tags", joinColumns = @JoinColumn(name = "video_id"))
     @Column(name = "tag")
     private Set<String> tags = new HashSet<>();
+
+    @ManyToMany(mappedBy = "likedVideos")
+    private Set<User> likedByUsers = new HashSet<>();
 }

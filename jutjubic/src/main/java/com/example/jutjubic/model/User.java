@@ -54,6 +54,14 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @ManyToMany
+    @JoinTable(
+        name = "user_liked_videos",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "video_id")
+    )
+    private java.util.Set<VideoPost> likedVideos = new java.util.HashSet<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton((GrantedAuthority) () -> "ROLE_USER");

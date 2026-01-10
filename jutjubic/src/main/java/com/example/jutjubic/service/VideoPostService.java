@@ -7,6 +7,7 @@ import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -103,10 +104,41 @@ public class VideoPostService {
         videoPostRepository.incrementViews(id);
         VideoPost videoPost = videoPostRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
+        
         return mapToResponse(videoPost);
     }
 
+    @Transactional
+    public void toggleLike(Long videoId, User user) {
+        VideoPost videoPost = videoPostRepository.findById(videoId)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+
+        if (user.getLikedVideos().contains(videoPost)) {
+            user.getLikedVideos().remove(videoPost);
+            videoPost.setLikes(videoPost.getLikes() - 1);
+        } else {
+            user.getLikedVideos().add(videoPost);
+            videoPost.setLikes(videoPost.getLikes() + 1);
+        }
+        videoPostRepository.save(videoPost);
+    }
+
     private VideoPostResponse mapToResponse(VideoPost videoPost) {
+        String email = null;
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            email = SecurityContextHolder.getContext().getAuthentication().getName();
+        }
+        
+        final String finalEmail = email;
+        boolean liked = false;
+        if (finalEmail != null && !finalEmail.equals("anonymousUser")) {
+            liked = videoPost.getLikedByUsers().stream()
+                    .anyMatch(u -> u.getEmail().equals(finalEmail));
+        }
+        return mapToResponse(videoPost, liked);
+    }
+
+    private VideoPostResponse mapToResponse(VideoPost videoPost, boolean likedByCurrentUser) {
         return new VideoPostResponse(
                 videoPost.getId(),
                 videoPost.getTitle(),
@@ -116,8 +148,10 @@ public class VideoPostService {
                 videoPost.getThumbnailPath(),
                 videoPost.getCreatedAt(),
                 videoPost.getViews(),
+                videoPost.getLikes(),
                 videoPost.getLocation(),
-                videoPost.getUser().getActualUsername()
+                videoPost.getUser().getActualUsername(),
+                likedByCurrentUser
         );
     }
 }
