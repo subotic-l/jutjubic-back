@@ -57,3 +57,8 @@ INSERT INTO public.video_comment(
 INSERT INTO public.video_comment(
 	id, created_at, text, user_id, video_post_id)
 	VALUES (3, '2026-01-8 12:13:36.07465', 'I really like this format of videos. As usual awesome', 1, 2);
+
+
+SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
+SELECT setval(pg_get_serial_sequence('video_posts', 'id'), (SELECT MAX(id) FROM video_posts));
+SELECT setval(pg_get_serial_sequence('video_comment', 'id'), (SELECT MAX(id) FROM video_comment));
