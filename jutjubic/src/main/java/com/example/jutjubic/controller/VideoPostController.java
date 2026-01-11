@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.example.jutjubic.dto.UserDto;
 
 import java.io.IOException;
 import java.util.List;
@@ -94,5 +95,15 @@ public class VideoPostController {
         } catch (IOException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/users/{username}")
+    public ResponseEntity<UserDto> getUserProfile(@PathVariable String username) {
+        User user = userService.findByUsername(username);
+        UserDto dto = new UserDto();
+        dto.setUsername(user.getActualUsername());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        return ResponseEntity.ok(dto);
     }
 }

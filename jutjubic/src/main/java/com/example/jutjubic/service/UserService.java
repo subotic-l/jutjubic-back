@@ -142,4 +142,9 @@ public class UserService {
         dto.setAddress(user.getAddress());
         return dto;
     }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+    }
 }

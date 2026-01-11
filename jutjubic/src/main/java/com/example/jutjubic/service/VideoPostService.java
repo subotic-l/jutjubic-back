@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.example.jutjubic.exception.UnauthorizedActionException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -94,7 +95,7 @@ public class VideoPostService {
     }
 
     public java.util.List<VideoPostResponse> getAllVideos() {
-        return videoPostRepository.findAll()
+        return videoPostRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -111,6 +112,11 @@ public class VideoPostService {
 
     @Transactional
     public LikeResponse toggleLike(Long videoId, User user) {
+
+        if (user == null || "anonymousUser".equals(user.getUsername())) {
+            throw new UnauthorizedActionException("You must be logged in to like video.");
+        }
+
         VideoPost videoPost = videoPostRepository.findById(videoId)
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
