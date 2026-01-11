@@ -1,5 +1,6 @@
 package com.example.jutjubic.controller;
 
+import com.example.jutjubic.dto.LikeResponse;
 import com.example.jutjubic.dto.VideoPostRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
 import com.example.jutjubic.model.User;
@@ -37,7 +38,6 @@ public class VideoPostController {
     public ResponseEntity<VideoPostResponse> createVideoPost(@ModelAttribute VideoPostRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userService.findByEmail(email);
-
         try {
             VideoPostResponse response = videoPostService.createVideoPost(request, user);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -47,11 +47,11 @@ public class VideoPostController {
     }
 
     @PostMapping("/{id}/like")
-    public ResponseEntity<Void> toggleLike(@PathVariable Long id) {
+    public ResponseEntity<LikeResponse> toggleLike(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userService.findByEmail(email);
-        videoPostService.toggleLike(id, user);
-        return ResponseEntity.ok().build();
+        LikeResponse response = videoPostService.toggleLike(id, user);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/thumbnails/{thumbnailPath:.+}")

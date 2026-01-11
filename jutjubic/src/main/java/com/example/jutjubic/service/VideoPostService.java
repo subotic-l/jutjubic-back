@@ -1,5 +1,6 @@
 package com.example.jutjubic.service;
 
+import com.example.jutjubic.dto.LikeResponse;
 import com.example.jutjubic.dto.VideoPostRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
 import com.example.jutjubic.model.User;
@@ -109,18 +110,22 @@ public class VideoPostService {
     }
 
     @Transactional
-    public void toggleLike(Long videoId, User user) {
+    public LikeResponse toggleLike(Long videoId, User user) {
         VideoPost videoPost = videoPostRepository.findById(videoId)
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
+        boolean liked;
         if (user.getLikedVideos().contains(videoPost)) {
             user.getLikedVideos().remove(videoPost);
             videoPost.setLikes(videoPost.getLikes() - 1);
+            liked = false;
         } else {
             user.getLikedVideos().add(videoPost);
             videoPost.setLikes(videoPost.getLikes() + 1);
+            liked = true;
         }
         videoPostRepository.save(videoPost);
+        return new LikeResponse(liked, videoPost.getLikes());
     }
 
     private VideoPostResponse mapToResponse(VideoPost videoPost) {
@@ -135,10 +140,10 @@ public class VideoPostService {
             liked = videoPost.getLikedByUsers().stream()
                     .anyMatch(u -> u.getEmail().equals(finalEmail));
         }
-        return mapToResponse(videoPost, liked);
+        return mapToResponseLiked(videoPost, liked);
     }
 
-    private VideoPostResponse mapToResponse(VideoPost videoPost, boolean likedByCurrentUser) {
+    private VideoPostResponse mapToResponseLiked(VideoPost videoPost, boolean likedByCurrentUser) {
         return new VideoPostResponse(
                 videoPost.getId(),
                 videoPost.getTitle(),
