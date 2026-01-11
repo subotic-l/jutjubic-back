@@ -8,12 +8,45 @@ spring:
     password: root
 
   jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    defer-datasource-initialization: true
+    properties:
       hibernate:
-        ddl-auto: update
-      show-sql: true
-      properties:
-        hibernate:
-          format_sql: true
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+
+  # Email konfiguracija
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: jutjubicisa@gmail.com
+    password: edqu lsoc jhaz cwde 
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 210MB
+
+# JWT konfiguracija
+jwt:
+  secret: JutjubicSecretKeyForJWTTokenGenerationAndValidation2025IsaProjekat
+  expiration: 86400  # 24 sata u sekundama
+
+# App URLs
+app:
+  backend:
+    url: https://astronautically-heathered-nestor.ngrok-free.dev
 
 server:
   port: 8080
