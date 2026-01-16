@@ -51,7 +51,8 @@ public class VideoPostService {
         videoPost.setTitle(request.getTitle());
         videoPost.setDescription(request.getDescription());
         videoPost.setTags(request.getTags());
-        videoPost.setLocation(request.getLocation());
+        videoPost.setLongitude(request.getLongitude());
+        videoPost.setLatitude(request.getLatitude());
         videoPost.setCreatedAt(LocalDateTime.now());
         videoPost.setUser(user);
         videoPost.setVideoUrl(videoPath.toString());
@@ -97,6 +98,14 @@ public class VideoPostService {
     public java.util.List<VideoPostResponse> getAllVideos() {
         return videoPostRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public java.util.List<VideoPostResponse> getAllVideosWithLocation() {
+        return videoPostRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .filter(video -> video.getLatitude() != null && video.getLongitude() != null)
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -160,7 +169,8 @@ public class VideoPostService {
                 videoPost.getCreatedAt(),
                 videoPost.getViews(),
                 videoPost.getLikes(),
-                videoPost.getLocation(),
+                videoPost.getLongitude(),
+                videoPost.getLatitude(),
                 videoPost.getUser().getActualUsername(),
                 likedByCurrentUser
         );

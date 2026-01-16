@@ -43,7 +43,8 @@ public class VideoPost {
     @Column(nullable = false)
     private Long likes = 0L;
 
-    private String location;
+    private Double longitude;
+    private Double latitude;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

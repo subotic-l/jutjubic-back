@@ -18,5 +18,6 @@ public class VideoPostRequest {
     private Set<String> tags;
     private MultipartFile thumbnail;
     private MultipartFile video;
-    private String location;
+    private Double latitude;
+    private Double longitude;
 }
