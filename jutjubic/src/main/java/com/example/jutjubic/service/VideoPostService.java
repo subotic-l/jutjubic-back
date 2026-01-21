@@ -110,26 +110,6 @@ public class VideoPostService {
                 .toList();
     }
 
-    public java.util.List<VideoPostResponse> getVideosWithinBounds(
-            Double minLatitude, Double maxLatitude, 
-            Double minLongitude, Double maxLongitude) {
-        
-        if (minLatitude == null || maxLatitude == null || 
-            minLongitude == null || maxLongitude == null) {
-            throw new IllegalArgumentException("All bounds parameters are required");
-        }
-        
-        if (minLatitude > maxLatitude || minLongitude > maxLongitude) {
-            throw new IllegalArgumentException("Invalid bounds: min values must be less than max values");
-        }
-        
-        return videoPostRepository.findAllWithinBounds(
-                minLatitude, maxLatitude, minLongitude, maxLongitude)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
     @Transactional
     public VideoPostResponse getVideoById(Long id) {
         videoPostRepository.incrementViews(id);

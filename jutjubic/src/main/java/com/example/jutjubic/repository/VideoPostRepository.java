@@ -15,16 +15,4 @@ public interface VideoPostRepository extends JpaRepository<VideoPost, Long> {
     void incrementViews(@Param("id") Long id);
 
     List<VideoPost> findAllByOrderByCreatedAtDesc();
-
-    @Query("SELECT v FROM VideoPost v WHERE " +
-           "v.latitude IS NOT NULL AND v.longitude IS NOT NULL AND " +
-           "v.latitude BETWEEN :minLat AND :maxLat AND " +
-           "v.longitude BETWEEN :minLon AND :maxLon " +
-           "ORDER BY v.createdAt DESC")
-    List<VideoPost> findAllWithinBounds(
-        @Param("minLat") Double minLatitude,
-        @Param("maxLat") Double maxLatitude,
-        @Param("minLon") Double minLongitude,
-        @Param("maxLon") Double maxLongitude
-    );
 }
