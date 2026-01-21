@@ -1,12 +1,11 @@
 package com.example.jutjubic.controller;
 
+import com.example.jutjubic.dto.TileRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
 import com.example.jutjubic.service.VideoPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -16,8 +15,9 @@ import java.util.List;
 public class MapController {
     private final VideoPostService videoPostService;
 
-    @GetMapping
-    public ResponseEntity<List<VideoPostResponse>> getAllVideosWithLocation() {
-        return ResponseEntity.ok(videoPostService.getAllVideosWithLocation());
+    @PostMapping("/tiles")
+    public ResponseEntity<List<VideoPostResponse>> getVideosForTiles(@RequestBody TileRequest request) {
+        List<VideoPostResponse> videos = videoPostService.getVideosForTiles(request.getTiles());
+        return ResponseEntity.ok(videos);
     }
 }

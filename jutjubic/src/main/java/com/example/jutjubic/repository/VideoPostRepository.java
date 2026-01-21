@@ -15,4 +15,13 @@ public interface VideoPostRepository extends JpaRepository<VideoPost, Long> {
     void incrementViews(@Param("id") Long id);
 
     List<VideoPost> findAllByOrderByCreatedAtDesc();
+    
+    @Query("SELECT v FROM VideoPost v WHERE " +
+           "v.tileX = :x AND v.tileY = :y AND v.tileZoom = :zoom " +
+           "ORDER BY v.createdAt DESC")
+    List<VideoPost> findByTileCoordinates(
+        @Param("x") Integer tileX,
+        @Param("y") Integer tileY,
+        @Param("zoom") Integer zoom
+    );
 }
