@@ -22,15 +22,110 @@ INSERT INTO public.users(
 	account_non_locked, address, created_at, email, enabled, first_name, last_name, password, updated_at, username)
 	VALUES (true, 'Zmaj Jovina 33, Novi Sad', '2024-11-01 19:45:00', 'milica.stojanovic@gmail.com', true, 'Milica', 'Stojanović', '$2a$10$3aZhymrejastwZvD/GqLc.wW6a1Tb1NNC3cizHl5T4F2rlqg2YQZW', '2024-11-15 09:30:00', 'milicas');
 
-INSERT INTO public.video_posts(
-	created_at, description, likes, location, thumbnail_path, title, video_url, views, user_id)
-	VALUES ('2026-01-8 12:13:36.07465', 'The Marina Bay waterfront is lighting up this Lunar New Year with a dazzling drone light show. Titled The Legend of the Dragon Gate, the event will see 1,500 drones take to the sky to tell the story of the mythical Dragon King. This video is not real. This is a fantasia visualization of a drone show of what it could be like.', 34, 'Beograd', 'uploads\thumbnails\flying_dragon_thumbnail.jpg', 'Singapore Marina Bay Flying Dragon 2024 Drone Light Show', 'uploads\videos\Singapore Marina Bay Flying Dragon 2024 Drone Light Show.mp4', 20, 1);
-INSERT INTO public.video_posts(
-	created_at, description, likes, location, thumbnail_path, title, video_url, views, user_id)
-	VALUES ('2026-01-5 12:13:36.07465', 'In this coding adventure I explore ray marching and signed distance functions to draw funky things!', 85, 'Novi Sad', 'uploads\thumbnails\ray_marching_thumbnail.jpg', 'Coding Adventure: Ray Marching', 'uploads\videos\Coding Adventure Ray Marching - Sebastian Lague (1080p, h264).mp4', 50, 3);
-INSERT INTO public.video_posts(
-	created_at, description, likes, location, thumbnail_path, title, video_url, views, user_id)
-	VALUES ('2026-01-6 12:13:36.07465', 'In this coding adventure I learn about compute shaders by creating a very simple raytracer. I then try use what I have learned to speed up my erosion simulation from the previous episode.', 11, 'Novi Sad', 'uploads\thumbnails\compute_shaders_thumbnail.jpg', 'Coding Adventure: Compute Shaders', 'uploads\videos\Coding Adventure Compute Shaders - Sebastian Lague (1080p, h264).mp4', 40, 3);
+INSERT INTO public.video_posts (
+    created_at,
+    description,
+    latitude,
+    likes,
+    longitude,
+    thumbnail_path,
+    tilex,
+    tiley,
+    tile_zoom,
+    title,
+    video_url,
+    views,
+    user_id
+)
+SELECT
+    '2026-01-08 12:13:36.07465',
+    'The Marina Bay waterfront is lighting up this Lunar New Year with a dazzling drone light show. Titled The Legend of the Dragon Gate, the event will see 1,500 drones take to the sky to tell the story of the mythical Dragon King. This video is not real. This is a fantasia visualization of a drone show of what it could be like.',
+    lat,
+    34,
+    lon,
+    'uploads/thumbnails/flying_dragon_thumbnail.jpg',
+    floor((lon + 180) / 360 * 4096)::int,
+    floor((1 - ln(tan(radians(lat)) + 1 / cos(radians(lat))) / pi()) / 2 * 4096)::int,
+    12,
+    'Singapore Marina Bay Flying Dragon 2024 Drone Light Show',
+    'uploads/videos/Singapore Marina Bay Flying Dragon 2024 Drone Light Show.mp4',
+    20,
+    1
+FROM (
+    SELECT
+        45.275153620399706 AS lat,
+        19.81594587018424 AS lon
+) coords;
+
+INSERT INTO public.video_posts (
+    created_at,
+    description,
+    latitude,
+    likes,
+    longitude,
+    thumbnail_path,
+    tilex,
+    tiley,
+    tile_zoom,
+    title,
+    video_url,
+    views,
+    user_id
+)
+SELECT
+    '2026-01-5 12:13:36.07465',
+    'In this coding adventure I explore ray marching and signed distance functions to draw funky things!',
+    lat,
+    85,
+    lon,
+    'uploads\thumbnails\ray_marching_thumbnail.jpg',
+    floor((lon + 180) / 360 * 4096)::int,
+    floor((1 - ln(tan(radians(lat)) + 1 / cos(radians(lat))) / pi()) / 2 * 4096)::int,
+    12,
+    'Coding Adventure: Ray Marching', 
+	'uploads\videos\Coding Adventure Ray Marching - Sebastian Lague (1080p, h264).mp4',
+    50,
+    3
+FROM (
+    SELECT
+        44.81272265346619 AS lat,
+        20.430094294470457 AS lon
+) coords;
+
+INSERT INTO public.video_posts (
+    created_at,
+    description,
+    latitude,
+    likes,
+    longitude,
+    thumbnail_path,
+    tilex,
+    tiley,
+    tile_zoom,
+    title,
+    video_url,
+    views,
+    user_id
+)
+SELECT
+    '2026-01-6 12:13:36.07465',
+    'In this coding adventure I learn about compute shaders by creating a very simple raytracer. I then try use what I have learned to speed up my erosion simulation from the previous episode.',
+    lat,
+    11,
+    lon,
+    'uploads\thumbnails\compute_shaders_thumbnail.jpg',
+    floor((lon + 180) / 360 * 4096)::int,
+    floor((1 - ln(tan(radians(lat)) + 1 / cos(radians(lat))) / pi()) / 2 * 4096)::int,
+    12,
+    'Coding Adventure: Compute Shaders', 
+	'uploads\videos\Coding Adventure Compute Shaders - Sebastian Lague (1080p, h264).mp4',
+    40,
+    3
+FROM (
+    SELECT
+        44.80299416137757 AS lat,
+        20.45925039249563 AS lon
+) coords;
 
 INSERT INTO public.video_tags(
 	video_id, tag)
