@@ -15,6 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.jutjubic.exception.UnauthorizedActionException;
+import com.example.jutjubic.util.TileRange;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +35,16 @@ public class VideoPostService {
     private static final String UPLOAD_DIR = "uploads";
     private static final String VIDEO_DIR = UPLOAD_DIR + "/videos";
     private static final String THUMBNAIL_DIR = UPLOAD_DIR + "/thumbnails";
-    private static final int DEFAULT_TILE_ZOOM = 12;
+
+    private static final int BASE_TILE_ZOOM = 12;
+
+    private static final int HIGH_ZOOM_THRESHOLD = 11;   // veliki zoom (grad/ulica)
+    private static final int MEDIUM_ZOOM_THRESHOLD = 7;  // srednji zoom (država/region)
+
+    private static final int MEDIUM_LEVEL_MAX_VIDEOS_PER_TILE = 10;
+    private static final int LOW_LEVEL_MAX_VIDEOS_PER_TILE = 3;
+
+    private static final int DEFAULT_TILE_ZOOM = BASE_TILE_ZOOM;
 
     @Transactional(rollbackFor = Exception.class)
     public VideoPostResponse createVideoPost(VideoPostRequest request, User user) throws IOException {
@@ -117,25 +130,59 @@ public class VideoPostService {
         if (tiles == null || tiles.isEmpty()) {
             return java.util.Collections.emptyList();
         }
-        
+
+        int mapZoom = tiles.get(0).getZoom();
+
+        boolean highZoom = mapZoom >= HIGH_ZOOM_THRESHOLD;
+        boolean mediumZoom = mapZoom >= MEDIUM_ZOOM_THRESHOLD && mapZoom < HIGH_ZOOM_THRESHOLD;
+
         java.util.Set<Long> videoIds = new java.util.HashSet<>();
         java.util.List<VideoPostResponse> result = new java.util.ArrayList<>();
-        
+
         for (TileCoordinate tile : tiles) {
             validateTile(tile);
-            
-            java.util.List<VideoPost> videosInTile = videoPostRepository.findByTileCoordinates(
-                tile.getX(), tile.getY(), tile.getZoom()
-            );
-            
-            for (VideoPost video : videosInTile) {
-                if (!videoIds.contains(video.getId())) {
-                    videoIds.add(video.getId());
-                    result.add(mapToResponse(video));
+
+            TileRange range = toBaseTileRange(tile);
+
+            if (highZoom) {
+                java.util.List<VideoPost> videosInRange =
+                        videoPostRepository.findAllByTileZoomAndTileXBetweenAndTileYBetween(
+                                BASE_TILE_ZOOM,
+                                range.getXStart(), range.getXEnd(),
+                                range.getYStart(), range.getYEnd()
+                        );
+
+                for (VideoPost video : videosInRange) {
+                    if (videoIds.add(video.getId())) {
+                        result.add(mapToResponse(video));
+                    }
+                }
+
+            } else {
+                int limit = mediumZoom ? MEDIUM_LEVEL_MAX_VIDEOS_PER_TILE : LOW_LEVEL_MAX_VIDEOS_PER_TILE;
+
+                PageRequest pageRequest = PageRequest.of(
+                        0,
+                        limit,
+                        Sort.by(Sort.Direction.DESC, "views") // ili "createdAt" ako želiš po datumu
+                );
+
+                Page<VideoPost> page =
+                        videoPostRepository.findByTileZoomAndTileXBetweenAndTileYBetween(
+                                BASE_TILE_ZOOM,
+                                range.getXStart(), range.getXEnd(),
+                                range.getYStart(), range.getYEnd(),
+                                pageRequest
+                        );
+
+                for (VideoPost video : page.getContent()) {
+                    if (videoIds.add(video.getId())) {
+                        result.add(mapToResponse(video));
+                    }
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -214,5 +261,19 @@ public class VideoPostService {
                 videoPost.getUser().getActualUsername(),
                 likedByCurrentUser
         );
+    }
+
+    private TileRange toBaseTileRange(TileCoordinate tile) {
+        int effectiveZoom = Math.min(tile.getZoom(), BASE_TILE_ZOOM);
+        int zoomDiff = BASE_TILE_ZOOM - effectiveZoom;
+        int factor = 1 << zoomDiff; // 2^(zoomDiff)
+
+        int baseXStart = tile.getX() * factor;
+        int baseXEnd   = (tile.getX() + 1) * factor - 1;
+
+        int baseYStart = tile.getY() * factor;
+        int baseYEnd   = (tile.getY() + 1) * factor - 1;
+
+        return new TileRange(baseXStart, baseXEnd, baseYStart, baseYEnd);
     }
 }
