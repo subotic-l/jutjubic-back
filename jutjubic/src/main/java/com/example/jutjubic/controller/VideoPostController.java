@@ -3,6 +3,7 @@ package com.example.jutjubic.controller;
 import com.example.jutjubic.dto.LikeResponse;
 import com.example.jutjubic.dto.VideoPostRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
+import com.example.jutjubic.dto.StreamInfoResponse;
 import com.example.jutjubic.model.User;
 import com.example.jutjubic.service.UserService;
 import com.example.jutjubic.service.VideoPostService;
@@ -33,6 +34,12 @@ public class VideoPostController {
     @GetMapping("/{id:[0-9]+}")
     public ResponseEntity<VideoPostResponse> getVideoById(@PathVariable Long id) {
         return ResponseEntity.ok(videoPostService.getVideoById(id));
+    }
+
+    @GetMapping("/{id:[0-9]+}/stream-info")
+    public ResponseEntity<StreamInfoResponse> getStreamInfo(@PathVariable Long id) {
+        StreamInfoResponse streamInfo = videoPostService.getStreamInfo(id);
+        return ResponseEntity.ok(streamInfo);
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
