@@ -53,6 +53,7 @@ public class WebSecurityConfig {
             .requestMatchers("/api/health").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/map/**").permitAll()
             
             .anyRequest().authenticated()
         );
