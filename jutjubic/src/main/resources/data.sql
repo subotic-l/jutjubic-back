@@ -24,6 +24,8 @@ INSERT INTO public.users(
 
 INSERT INTO public.video_posts (
     created_at,
+    scheduled_release_time,
+    video_duration_seconds,
     description,
     latitude,
     likes,
@@ -39,16 +41,18 @@ INSERT INTO public.video_posts (
 )
 SELECT
     '2026-01-08 12:13:36.07465',
+    null,
+    60,
     'The Marina Bay waterfront is lighting up this Lunar New Year with a dazzling drone light show. Titled The Legend of the Dragon Gate, the event will see 1,500 drones take to the sky to tell the story of the mythical Dragon King. This video is not real. This is a fantasia visualization of a drone show of what it could be like.',
     lat,
     34,
     lon,
-    'uploads/thumbnails/flying_dragon_thumbnail.jpg',
+    'uploads\thumbnails\flying_dragon_thumbnail.jpg',
     floor((lon + 180) / 360 * 4096)::int,
     floor((1 - ln(tan(radians(lat)) + 1 / cos(radians(lat))) / pi()) / 2 * 4096)::int,
     12,
     'Singapore Marina Bay Flying Dragon 2024 Drone Light Show',
-    'uploads/videos/Singapore Marina Bay Flying Dragon 2024 Drone Light Show.mp4',
+    'uploads\videos\Singapore Marina Bay Flying Dragon 2024 Drone Light Show.mp4',
     20,
     1
 FROM (
@@ -59,6 +63,8 @@ FROM (
 
 INSERT INTO public.video_posts (
     created_at,
+    scheduled_release_time,
+    video_duration_seconds,
     description,
     latitude,
     likes,
@@ -74,6 +80,8 @@ INSERT INTO public.video_posts (
 )
 SELECT
     '2026-01-5 12:13:36.07465',
+    null,
+    305,
     'In this coding adventure I explore ray marching and signed distance functions to draw funky things!',
     lat,
     85,
@@ -94,6 +102,8 @@ FROM (
 
 INSERT INTO public.video_posts (
     created_at,
+    scheduled_release_time,
+    video_duration_seconds,
     description,
     latitude,
     likes,
@@ -109,6 +119,8 @@ INSERT INTO public.video_posts (
 )
 SELECT
     '2026-01-6 12:13:36.07465',
+    null,
+    324,
     'In this coding adventure I learn about compute shaders by creating a very simple raytracer. I then try use what I have learned to speed up my erosion simulation from the previous episode.',
     lat,
     11,

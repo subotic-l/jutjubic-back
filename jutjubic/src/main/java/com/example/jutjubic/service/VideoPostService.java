@@ -207,10 +207,6 @@ public class VideoPostService {
         VideoPost videoPost = videoPostRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
         
-        if (!isVideoAvailable(videoPost)) {
-            throw new RuntimeException("Video is not yet available. Scheduled for: " + videoPost.getScheduledReleaseTime());
-        }
-        
         videoPostRepository.incrementViews(id);
         return mapToResponse(videoPost);
     }
@@ -260,15 +256,6 @@ public class VideoPostService {
         }
         
         return response;
-    }
-
-    private boolean isVideoAvailable(VideoPost videoPost) {
-        if (videoPost.getScheduledReleaseTime() == null) {
-            return true;
-        }
-        
-        return LocalDateTime.now().isAfter(videoPost.getScheduledReleaseTime()) || 
-               LocalDateTime.now().isEqual(videoPost.getScheduledReleaseTime());
     }
 
     @Transactional
