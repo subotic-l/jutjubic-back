@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface VideoPostRepository extends JpaRepository<VideoPost, Long> {
@@ -23,5 +25,23 @@ public interface VideoPostRepository extends JpaRepository<VideoPost, Long> {
         @Param("x") Integer tileX,
         @Param("y") Integer tileY,
         @Param("zoom") Integer zoom
+    );
+
+    List<VideoPost> findAllByTileZoomAndTileXBetweenAndTileYBetween(
+            Integer tileZoom,
+            Integer tileXStart,
+            Integer tileXEnd,
+            Integer tileYStart,
+            Integer tileYEnd
+    );
+
+    // NOVO: paginirano (ograničen broj videa po sekciji)
+    Page<VideoPost> findByTileZoomAndTileXBetweenAndTileYBetween(
+            Integer tileZoom,
+            Integer tileXStart,
+            Integer tileXEnd,
+            Integer tileYStart,
+            Integer tileYEnd,
+            Pageable pageable
     );
 }
