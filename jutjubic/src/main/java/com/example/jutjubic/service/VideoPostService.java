@@ -10,6 +10,8 @@ import com.example.jutjubic.repository.VideoPostRepository;
 import com.example.jutjubic.util.TileCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -275,5 +277,39 @@ public class VideoPostService {
         int baseYEnd   = (tile.getY() + 1) * factor - 1;
 
         return new TileRange(baseXStart, baseXEnd, baseYStart, baseYEnd);
+    }
+
+    @Scheduled(cron = "0 0 3 * * *")
+    public void recalculateTileData() {
+        int pageSize = 100;
+        int pageNumber = 0;
+        Page<VideoPost> page;
+
+        do {
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            page = videoPostRepository.findAll(pageable);
+
+            processVideoBatch(page.getContent());
+
+            pageNumber++;
+        } while (page.hasNext());
+    }
+
+    @Transactional
+    protected void processVideoBatch(java.util.List<VideoPost> videos) {
+        for (VideoPost video : videos) {
+            if (video.getLatitude() != null && video.getLongitude() != null) {
+                TileCoordinate tile = TileCalculator.getTileForLocation(
+                        video.getLatitude(),
+                        video.getLongitude(),
+                        DEFAULT_TILE_ZOOM
+                );
+                video.setTileX(tile.getX());
+                video.setTileY(tile.getY());
+                video.setTileZoom(tile.getZoom());
+            }
+        }
+
+        videoPostRepository.saveAll(videos);
     }
 }
