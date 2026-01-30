@@ -26,4 +26,6 @@ public class VideoPostResponse {
     private Double latitude;
     private String username;
     private boolean likedByCurrentUser;
+    private LocalDateTime scheduledReleaseTime;
+    private Long videoDurationSeconds;
 }
