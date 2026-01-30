@@ -16,10 +16,6 @@ spring:
       hibernate:
         format_sql: true
 
-  sql:
-    init:
-      mode: always
-
   # Email konfiguracija
   mail:
     host: smtp.gmail.com
@@ -37,6 +33,10 @@ spring:
     multipart:
       max-file-size: 200MB
       max-request-size: 210MB
+
+  sql:
+    init:
+      mode: never
 
 # JWT konfiguracija
 jwt:
