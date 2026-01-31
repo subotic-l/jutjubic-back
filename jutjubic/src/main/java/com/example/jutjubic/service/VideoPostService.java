@@ -35,6 +35,7 @@ import java.util.UUID;
 public class VideoPostService {
 
     private final VideoPostRepository videoPostRepository;
+    private final DailyVideoViewService dailyVideoViewService;
     private static final String UPLOAD_DIR = "uploads";
     private static final String VIDEO_DIR = UPLOAD_DIR + "/videos";
     private static final String THUMBNAIL_DIR = UPLOAD_DIR + "/thumbnails";
@@ -208,6 +209,7 @@ public class VideoPostService {
                 .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
         
         videoPostRepository.incrementViews(id);
+        dailyVideoViewService.recordView(id); // Beleži dnevni pregled
         return mapToResponse(videoPost);
     }
 
