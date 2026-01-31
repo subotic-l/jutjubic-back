@@ -54,7 +54,7 @@ public class PopularVideosService {
         dto.setPopularityScore(score);
         dto.setTotalViews(video.getViews());
         dto.setLikes(video.getLikes());
-        dto.setUploaderUsername(video.getUser().getUsername());
+        dto.setUploaderUsername(video.getUser().getActualUsername());
         return dto;
     }
 }
