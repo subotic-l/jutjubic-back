@@ -55,6 +55,7 @@ public class WebSecurityConfig {
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/health").permitAll()
             .requestMatchers("/actuator/**").permitAll()
+            .requestMatchers("/api/popular-videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/map/**").permitAll()
