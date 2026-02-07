@@ -1,6 +1,10 @@
 spring:
   application:
     name: jutjubic
+  
+  docker:
+    compose:
+      enabled: false
 
   datasource:
     url: jdbc:postgresql://localhost:5432/jutjubic
