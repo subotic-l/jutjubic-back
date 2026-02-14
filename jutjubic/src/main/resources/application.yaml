@@ -40,6 +40,11 @@ spring:
     multipart:
       max-file-size: 200MB
       max-request-size: 210MB
+  
+  # DODAJ OVO - Timeout za async requeste
+  mvc:
+    async:
+      request-timeout: 600000  # 10 minuta
 
   sql:
     init:
@@ -71,7 +76,6 @@ management:
     db:
       enabled: true
 
-
 # JWT konfiguracija
 jwt:
   secret: JutjubicSecretKeyForJWTTokenGenerationAndValidation2025IsaProjekat
@@ -84,3 +88,7 @@ app:
 
 server:
   port: 8080
+  connection-timeout: 600000  # 10 minuta
+  tomcat:
+    connection-timeout: 600000  # 10 minuta
+    max-swallow-size: 250MB
