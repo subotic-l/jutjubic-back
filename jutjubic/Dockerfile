@@ -4,12 +4,11 @@ FROM maven:3.9-eclipse-temurin-17-alpine AS build
 
 WORKDIR /app
 
-# Kopiraj pom.xml i preuzmi dependencies (layer caching)
+# Kopiraj pom.xml i source code
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Kopiraj source code i build-uj aplikaciju
 COPY src ./src
+
+# Build aplikaciju (Maven će automatski preuzeti dependencies)
 RUN mvn clean package -DskipTests -B
 
 # Stage 2: Runtime stage

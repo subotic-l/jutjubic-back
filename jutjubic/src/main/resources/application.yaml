@@ -2,14 +2,17 @@ spring:
   application:
     name: jutjubic
   
+  main:
+    allow-bean-definition-overriding: true
+  
   docker:
     compose:
       enabled: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/jutjubic
-    username: postgres
-    password: root
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jutjubic}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -55,7 +58,8 @@ spring:
 
   sql:
     init:
-      mode: never
+      mode: always
+      continue-on-error: true
 
 # Management endpoints za health checks i monitoring
 management:

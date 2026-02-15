@@ -36,6 +36,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // WebSocket endpoint with SockJS fallback for browser compatibility
         // Clients connect to: ws://host/ws-chat or http://host/ws-chat (SockJS)
+        // NO AUTHENTICATION - public access for live chat
         registry.addEndpoint("/ws-chat")
                 .setAllowedOriginPatterns("*") // Configure allowed origins based on your frontend deployment
                 .withSockJS(); // Enable SockJS fallback for browsers that don't support WebSocket
