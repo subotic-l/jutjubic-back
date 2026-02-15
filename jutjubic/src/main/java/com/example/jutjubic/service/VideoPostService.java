@@ -9,6 +9,8 @@ import com.example.jutjubic.model.User;
 import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoPostRepository;
 import com.example.jutjubic.util.TileCalculator;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
@@ -50,6 +52,8 @@ public class VideoPostService {
 
     private static final int DEFAULT_TILE_ZOOM = BASE_TILE_ZOOM;
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
     @Transactional(rollbackFor = Exception.class)
     public VideoPostResponse createVideoPost(VideoPostRequest request, User user) throws IOException {
         if (request.getVideo() == null || request.getVideo().isEmpty()) {
@@ -125,6 +129,9 @@ public class VideoPostService {
         return Files.readAllBytes(path);
     }
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
+    @Transactional(readOnly = true)
     public java.util.List<VideoPostResponse> getAllVideos() {
         return videoPostRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -132,6 +139,9 @@ public class VideoPostService {
                 .toList();
     }
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
+    @Transactional(readOnly = true)
     public java.util.List<VideoPostResponse> getVideosForTiles(java.util.List<TileCoordinate> tiles) {
         if (tiles == null || tiles.isEmpty()) {
             return java.util.Collections.emptyList();

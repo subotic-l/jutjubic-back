@@ -123,6 +123,11 @@ public class ClusterDemoService {
     public VideoPost createVideo(VideoPost video) {
         log.info("Creating video: {}", video.getTitle());
         
+        // Postavi created_at ako nije već postavljen
+        if (video.getCreatedAt() == null) {
+            video.setCreatedAt(LocalDateTime.now());
+        }
+        
         // Čuva u bazu
         VideoPost savedVideo = videoPostRepository.save(video);
         log.info("Video saved to database with ID: {}", savedVideo.getId());

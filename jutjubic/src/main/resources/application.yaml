@@ -37,6 +37,15 @@ spring:
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
     connection-timeout: 5000
+    requested-heartbeat: 30
+    # Brzo failovanje ako RabbitMQ nije dostupan
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        max-interval: 3000
+        multiplier: 1.5
 
   # Email konfiguracija
   mail:
