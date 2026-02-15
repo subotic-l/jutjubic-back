@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package upload;
+
+option java_package = "com.jutjubic.common.proto";
+option java_outer_classname = "UploadEventProto";
+
+message UploadEvent {
+  string title = 1;
+  string author = 2;
+  int64 size = 3;
+  int64 duration = 4;
+  int64 uploadedAt = 5;
+}
