@@ -266,6 +266,9 @@ INSERT INTO daily_video_views (video_id, view_date, view_count) VALUES
 -- 3. Video 1 (score: 1400)
 -- Video 3 je četvrti sa score-om 940
 
+--Komanda za pokretanje ETL pipeline-a:
+--Invoke-RestMethod -Uri http://localhost:8080/api/popular-videos/run-etl -Method POST
+
 INSERT INTO public.popularity_reports(
 	id, first_video_score, report_date, second_video_score, third_video_score, first_video_id, second_video_id, third_video_id)
 	VALUES (1, 2170, NOW(), 1780, 1400, 4, 2, 1);
