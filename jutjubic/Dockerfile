@@ -12,8 +12,11 @@ COPY jutjubic/src ./jutjubic/src
 COPY upload-event-consumer/pom.xml ./upload-event-consumer/
 COPY upload-event-consumer/src ./upload-event-consumer/src
 
+# Resolve dependencies first (for better caching)
+RUN mvn dependency:go-offline -B -pl common,jutjubic -am || true
+
 # Build samo common i jutjubic module
-RUN mvn clean install -DskipTests -B -pl common,jutjubic
+RUN mvn clean install -DskipTests -B -pl common,jutjubic -am
 
 # Stage 2: Runtime stage
 FROM eclipse-temurin:17-jre-alpine

@@ -63,11 +63,6 @@ public class RabbitMQConfig {
         return new Queue("video.events", true); // durable queue
     }
 
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        return new RabbitTemplate(connectionFactory);
-    }
-
     /**
      * Connection factory sa timeout postavkama za resilience
      */
@@ -82,8 +77,10 @@ public class RabbitMQConfig {
         // Timeout i recovery settings za klaster resilience
         factory.setConnectionTimeout(5000);
         factory.setRequestedHeartBeat(30);
+        return factory;
     }
 
+    @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
