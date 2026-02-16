@@ -110,6 +110,9 @@ management:
     # Proverava RabbitMQ konekciju (graceful degradation ako nije dostupan)
     rabbit:
       enabled: true
+    # Onemogući mail health check (Gmail blokira preview pokušaja)
+    mail:
+      enabled: false
     # Ukupan health status zavisi od komponenti
     defaults:
       enabled: true
