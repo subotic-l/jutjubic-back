@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,6 +43,15 @@ public class WebSecurityConfig {
     @Autowired
     private TokenUtils tokenUtils;
 
+    @Autowired
+    private UserActivityFilter userActivityFilter;
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // Completely bypass Spring Security for WebSocket endpoints
+        return (web) -> web.ignoring().requestMatchers("/ws-chat/**");
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -49,12 +59,20 @@ public class WebSecurityConfig {
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint));
 
         http.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/ws-chat/**").permitAll()  // FIRST - Allow all WebSocket endpoints without auth
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/health").permitAll()
+            .requestMatchers("/api/debug/**").permitAll()
+            .requestMatchers("/api/test/**").permitAll()
+            .requestMatchers("/actuator/**").permitAll()
+            .requestMatchers("/api/popular-videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/map/**").permitAll()
-            
+            .requestMatchers("/ws/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/watch-party").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/watch-party/**").permitAll()
+
             .anyRequest().authenticated()
         );
 
@@ -62,6 +80,7 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable());
 
         http.addFilterBefore(new TokenAuthenticationFilter(tokenUtils, customUserDetailsService), BasicAuthenticationFilter.class);
+        http.addFilterAfter(userActivityFilter, TokenAuthenticationFilter.class);
 
         return http.build();
     }

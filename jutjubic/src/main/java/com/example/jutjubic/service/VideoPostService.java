@@ -4,11 +4,17 @@ import com.example.jutjubic.dto.LikeResponse;
 import com.example.jutjubic.dto.TileCoordinate;
 import com.example.jutjubic.dto.VideoPostRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
+import com.example.jutjubic.dto.StreamInfoResponse;
+import com.example.jutjubic.dto.UploadEventDto;
 import com.example.jutjubic.model.User;
 import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoPostRepository;
 import com.example.jutjubic.util.TileCalculator;
+import com.example.jutjubic.dto.TranscodingMessage;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -31,9 +37,13 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VideoPostService {
 
     private final VideoPostRepository videoPostRepository;
+    private final DailyVideoViewService dailyVideoViewService;
+    private final UploadEventPublisher uploadEventPublisher;
+    private final TranscodingProducer transcodingProducer;
     private static final String UPLOAD_DIR = "uploads";
     private static final String VIDEO_DIR = UPLOAD_DIR + "/videos";
     private static final String THUMBNAIL_DIR = UPLOAD_DIR + "/thumbnails";
@@ -48,6 +58,8 @@ public class VideoPostService {
 
     private static final int DEFAULT_TILE_ZOOM = BASE_TILE_ZOOM;
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
     @Transactional(rollbackFor = Exception.class)
     public VideoPostResponse createVideoPost(VideoPostRequest request, User user) throws IOException {
         if (request.getVideo() == null || request.getVideo().isEmpty()) {
@@ -75,6 +87,8 @@ public class VideoPostService {
         videoPost.setUser(user);
         videoPost.setVideoUrl(videoPath.toString());
         videoPost.setThumbnailPath(thumbnailPath.toString());
+        videoPost.setScheduledReleaseTime(request.getScheduledReleaseTime());
+        videoPost.setVideoDurationSeconds(request.getVideoDurationSeconds());
         
         if (request.getLatitude() != null && request.getLongitude() != null) {
             TileCoordinate tile = TileCalculator.getTileForLocation(
@@ -89,6 +103,8 @@ public class VideoPostService {
 
         videoPost = videoPostRepository.save(videoPost);
 
+        sendToTranscodingQueue(videoPost);
+
         try {
             uploadFile(request.getVideo(), videoPath);
             uploadFile(request.getThumbnail(), thumbnailPath);
@@ -96,7 +112,28 @@ public class VideoPostService {
             throw new IOException("Failed to upload files, rolling back...", e);
         }
 
+        // Publish upload event to RabbitMQ (JSON and Protobuf)
+        publishUploadEvent(videoPost);
+
         return mapToResponse(videoPost);
+    }
+
+    private void publishUploadEvent(VideoPost videoPost) {
+        try {
+            UploadEventDto event = new UploadEventDto(
+                videoPost.getId(),
+                videoPost.getTitle(),
+                videoPost.getUser().getActualUsername(),
+                videoPost.getVideoUrl(),
+                videoPost.getCreatedAt(),
+                videoPost.getLatitude(),
+                videoPost.getLongitude()
+            );
+            uploadEventPublisher.publishUploadEvent(event);
+        } catch (Exception e) {
+            // Ne bacaj exception, samo loguj - ne želimo da pad RabbitMQ-a spreči upload videa
+            // Log je već u UploadEventPublisher
+        }
     }
 
     private void createDirectories() throws IOException {
@@ -121,6 +158,9 @@ public class VideoPostService {
         return Files.readAllBytes(path);
     }
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
+    @Transactional(readOnly = true)
     public java.util.List<VideoPostResponse> getAllVideos() {
         return videoPostRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -128,6 +168,9 @@ public class VideoPostService {
                 .toList();
     }
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
+    @Transactional(readOnly = true)
     public java.util.List<VideoPostResponse> getVideosForTiles(java.util.List<TileCoordinate> tiles) {
         if (tiles == null || tiles.isEmpty()) {
             return java.util.Collections.emptyList();
@@ -201,11 +244,59 @@ public class VideoPostService {
 
     @Transactional
     public VideoPostResponse getVideoById(Long id) {
-        videoPostRepository.incrementViews(id);
         VideoPost videoPost = videoPostRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
         
+        videoPostRepository.incrementViews(id);
+        dailyVideoViewService.recordView(id); // Beleži dnevni pregled
         return mapToResponse(videoPost);
+    }
+
+    public StreamInfoResponse getStreamInfo(Long id) {
+        VideoPost videoPost = videoPostRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
+        
+        LocalDateTime now = LocalDateTime.now();
+        StreamInfoResponse response = new StreamInfoResponse();
+        response.setServerTime(now);
+        
+        if (videoPost.getScheduledReleaseTime() == null) {
+            response.setScheduled(false);
+            response.setHasStarted(true);
+            response.setHasEnded(false);
+            response.setCurrentOffsetSeconds(0L);
+            response.setVideoDurationSeconds(videoPost.getVideoDurationSeconds());
+            return response;
+        }
+        
+        response.setScheduled(true);
+        response.setScheduledReleaseTime(videoPost.getScheduledReleaseTime());
+        response.setVideoDurationSeconds(videoPost.getVideoDurationSeconds());
+        
+        if (now.isBefore(videoPost.getScheduledReleaseTime())) {
+            response.setHasStarted(false);
+            response.setHasEnded(false);
+            response.setCurrentOffsetSeconds(0L);
+            return response;
+        }
+        
+        long offsetSeconds = java.time.Duration.between(
+            videoPost.getScheduledReleaseTime(), 
+            now
+        ).getSeconds();
+        
+        response.setHasStarted(true);
+        response.setCurrentOffsetSeconds(offsetSeconds);
+        
+        if (videoPost.getVideoDurationSeconds() != null && 
+            offsetSeconds >= videoPost.getVideoDurationSeconds()) {
+            response.setHasEnded(true);
+            response.setCurrentOffsetSeconds(videoPost.getVideoDurationSeconds());
+        } else {
+            response.setHasEnded(false);
+        }
+        
+        return response;
     }
 
     @Transactional
@@ -254,14 +345,18 @@ public class VideoPostService {
                 videoPost.getDescription(),
                 videoPost.getTags(),
                 videoPost.getVideoUrl(),
+                videoPost.getTranscodedVideoUrl(),
                 videoPost.getThumbnailPath(),
+                videoPost.getCompressedThumbnailPath(),
                 videoPost.getCreatedAt(),
                 videoPost.getViews(),
                 videoPost.getLikes(),
                 videoPost.getLongitude(),
                 videoPost.getLatitude(),
                 videoPost.getUser().getActualUsername(),
-                likedByCurrentUser
+                likedByCurrentUser,
+                videoPost.getScheduledReleaseTime(),
+                videoPost.getVideoDurationSeconds()
         );
     }
 
@@ -311,5 +406,27 @@ public class VideoPostService {
         }
 
         videoPostRepository.saveAll(videos);
+    }
+
+    private void sendToTranscodingQueue(VideoPost videoPost) {
+        try {
+            String originalPath = videoPost.getVideoUrl();
+            String transcodedPath = originalPath.replace(".mp4", "_720p.mp4");
+
+            TranscodingMessage message = new TranscodingMessage(
+                    videoPost.getId(),
+                    originalPath,
+                    transcodedPath,
+                    "1280:720",     // 720p resolution
+                    "2000k",        // 2 Mbps bitrate
+                    "libx264"       // H.264 codec
+            );
+
+            transcodingProducer.sendTranscodingTask(message);
+
+            log.info("Sent video {} to transcoding queue", videoPost.getId());
+        } catch (Exception e) {
+            log.error("Failed to send video {} to transcoding queue: {}", videoPost.getId(), e.getMessage(), e);
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.example.jutjubic.dto.RegisterRequest;
 import com.example.jutjubic.dto.UserDto;
 import com.example.jutjubic.model.User;
 import com.example.jutjubic.security.TokenUtils;
+import com.example.jutjubic.service.ActiveUserMetricsService;
 import com.example.jutjubic.service.LoginAttemptService;
 import com.example.jutjubic.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +39,9 @@ public class AuthController {
 
     @Autowired
     private LoginAttemptService loginAttemptService;
+
+    @Autowired
+    private ActiveUserMetricsService activeUserMetricsService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
@@ -74,6 +78,7 @@ public class AuthController {
             String token = tokenUtils.generateToken(user.getEmail());
 
             loginAttemptService.recordLoginAttempt(ipAddress, true);
+            activeUserMetricsService.recordUserActivity(user.getEmail());
 
             JwtAuthenticationResponse response = new JwtAuthenticationResponse(token, tokenUtils.getExpiration());
             

@@ -1,0 +1,394 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Konekcije",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "showPoints": "auto"
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": ["last", "max", "mean"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "maxDataPoints": 300,
+      "interval": "2s",
+      "targets": [
+        {
+          "expr": "sum(hikaricp_connections_active{application=\"jutjubic\"})",
+          "legendFormat": "Aktivne konekcije (ukupno)",
+          "refId": "A",
+          "interval": "2s"
+        },
+        {
+          "expr": "sum(hikaricp_connections_idle{application=\"jutjubic\"})",
+          "legendFormat": "Idle konekcije (ukupno)",
+          "refId": "B",
+          "interval": "2s"
+        }
+      ],
+      "title": "1. Broj aktivnih i idle konekcija ka bazi (24h)",
+      "type": "timeseries",
+      "description": "Aktivne = izvršavaju query. Idle = spremne u connection pool-u. Minimum idle je 5."
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 50,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 35
+              },
+              {
+                "color": "red",
+                "value": 45
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "sum(hikaricp_connections_active{application=\"jutjubic\"})",
+          "legendFormat": "Aktivne (ukupno)",
+          "refId": "A",
+          "instant": true,
+          "interval": "2s"
+        },
+        {
+          "expr": "sum(hikaricp_connections_idle{application=\"jutjubic\"})",
+          "legendFormat": "Idle (ukupno)",
+          "refId": "B",
+          "instant": true,
+          "interval": "2s"
+        }
+      ],
+      "title": "Trenutno stanje DB konekcija",
+      "type": "gauge",
+      "description": "HikariCP connection pool - aktivne izvršavaju query, idle čekaju u pool-u"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "CPU %",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "showPoints": "auto"
+          },
+          "max": 1,
+          "min": 0,
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": ["last", "max", "mean"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "maxDataPoints": 300,
+      "interval": "2s",
+      "targets": [
+        {
+          "expr": "avg(avg_over_time(system_cpu_usage{application=\"jutjubic\"}[5m]))",
+          "legendFormat": "Prosečno CPU (5 min)",
+          "refId": "A",
+          "interval": "2s"
+        },
+        {
+          "expr": "avg(avg_over_time(system_cpu_usage{application=\"jutjubic\"}[15m]))",
+          "legendFormat": "Prosečno CPU (15 min)",
+          "refId": "B",
+          "interval": "2s"
+        },
+        {
+          "expr": "avg(system_cpu_usage{application=\"jutjubic\"})",
+          "legendFormat": "CPU trenutno (prosek)",
+          "refId": "C",
+          "interval": "2s"
+        }
+      ],
+      "title": "2. Prosečno zauzeće CPU u vremenskom intervalu (24h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "avg(system_cpu_usage{application=\"jutjubic\"})",
+          "legendFormat": "CPU (prosek)",
+          "refId": "A",
+          "instant": true,
+          "interval": "2s"
+        }
+      ],
+      "title": "Trenutno CPU zauzeće",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Broj korisnika",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "lineWidth": 3,
+            "showPoints": "always",
+            "pointSize": 8
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 16
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": ["last", "max", "min"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "maxDataPoints": 300,
+      "interval": "2s",
+      "targets": [
+        {
+          "expr": "max(active_users_current{application=\"jutjubic\"})",
+          "legendFormat": "Aktivni korisnici",
+          "refId": "A",
+          "interval": "2s"
+        }
+      ],
+      "title": "3. Broj trenutno aktivnih korisnika (24h)",
+      "type": "timeseries",
+      "description": "Korisnik je aktivan ako je napravio bilo koji HTTP zahtev u poslednjih 10 minuta. Osvežava se svakih 2s."
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 16
+      },
+      "id": 6,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {
+          "titleSize": 20,
+          "valueSize": 60
+        }
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "expr": "max(active_users_current{application=\"jutjubic\"})",
+          "legendFormat": "Aktivni",
+          "refId": "A",
+          "instant": true,
+          "interval": "2s"
+        }
+      ],
+      "title": "Trenutno aktivnih korisnika",
+      "type": "gauge",
+      "description": "Instant query - prikazuje tačnu trenutnu vrednost bez cache-a. Aktivni = napravili HTTP zahtev u poslednjih 10 min"
+    }
+  ],
+  "refresh": "2s",
+  "schemaVersion": 27,
+  "style": "dark",
+  "tags": ["jutjubic"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+  },
+  "timezone": "",
+  "title": "Jutjubic - Monitoring (Zahtevi projekta)",
+  "uid": "jutjubic-monitoring",
+  "version": 1,
+  "fiscalYearStartMonth": 0,
+  "liveNow": true
+}

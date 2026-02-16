@@ -7,6 +7,8 @@ import com.example.jutjubic.model.VideoComment;
 import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoCommentRepository;
 import com.example.jutjubic.repository.VideoPostRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,8 @@ public class VideoCommentService {
     private final VideoCommentRepository commentRepository;
     private final VideoPostRepository videoPostRepository;
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
     @Transactional
     public VideoCommentResponse addComment(VideoCommentRequest request, User user) {
         VideoPost videoPost = videoPostRepository.findById(request.getVideoId())
@@ -39,6 +43,8 @@ public class VideoCommentService {
         return mapToResponse(comment);
     }
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
     @Cacheable(value = "videoComments", key = "#videoId + '-' + #page + '-' + #size")
     public List<VideoCommentResponse> getComments(Long videoId, int page, int size) {
         VideoPost videoPost = videoPostRepository.findById(videoId)
