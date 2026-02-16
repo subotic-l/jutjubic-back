@@ -150,7 +150,5 @@ Write-Host "  - RabbitMQ UI: http://localhost:15672 (guest/guest)" -ForegroundCo
 Write-Host "  - Prometheus: http://localhost:9090" -ForegroundColor White
 Write-Host "  - Grafana: http://localhost:3000 (admin/admin)" -ForegroundColor White
 Write-Host ""
-Write-Host "Za testiranje otpornosti pogledaj CLUSTER_SETUP.md" -ForegroundColor Yellow
-Write-Host ""
 Write-Host "Logovi: docker-compose logs -f" -ForegroundColor Gray
 Write-Host "Stop: docker-compose down" -ForegroundColor Gray

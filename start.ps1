@@ -6,7 +6,7 @@ Write-Host "  Starting Jutjubic with Consumer" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$jutjubicPath = "C:\Projects\jutjubic\jutjubic"
+$jutjubicPath = "D:\Projects\jutjubic-back\jutjubic-back\jutjubic"
 
 # Check if docker-compose.yml exists
 if (-not (Test-Path "$jutjubicPath\docker-compose.yml")) {
@@ -23,8 +23,8 @@ Write-Host ""
 try {
     # Start all services
     docker-compose up -d --build
-    docker cp src/main/resources/data.sql jutjubic-postgres:/tmp/data.sql
-    docker exec -it jutjubic-postgres psql -U postgres -d jutjubic -f /tmp/data.sql
+    # docker cp src/main/resources/data.sql jutjubic-postgres:/tmp/data.sql
+    # docker exec -it jutjubic-postgres psql -U postgres -d jutjubic -f /tmp/data.sql
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""

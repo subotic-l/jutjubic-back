@@ -42,34 +42,6 @@ try {
         Write-Host ""
     }
     
-    # Save to file if not disabled
-    if (-not $NoFile) {
-        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        
-        if ($JsonOutput) {
-            # Save as JSON
-            $jsonFile = $OutputFile -replace '\.csv$', '.json'
-            $outputData = @{
-                timestamp = $timestamp
-                json = $response.json
-                protobuf = $response.protobuf
-                comparison = $response.comparison
-            } | ConvertTo-Json -Depth 3
-            
-            $outputData | Out-File -FilePath $jsonFile -Encoding UTF8
-            Write-Host "Results saved to: $jsonFile" -ForegroundColor Green
-        }
-        else {
-            # Save as CSV
-            $csvContent = @()
-            $csvContent += "Timestamp,Format,AvgDeserializeNs,AvgDeserializeMicroseconds,AvgSizeBytes"
-            $csvContent += "$timestamp,JSON,$($response.json.avgDeserializeNs),$([Math]::Round($response.json.avgDeserializeNs / 1000, 2)),$($response.json.avgSizeBytes)"
-            $csvContent += "$timestamp,Protobuf,$($response.protobuf.avgDeserializeNs),$([Math]::Round($response.protobuf.avgDeserializeNs / 1000, 2)),$($response.protobuf.avgSizeBytes)"
-            
-            $csvContent | Out-File -FilePath $OutputFile -Encoding UTF8
-            Write-Host "Results saved to: $OutputFile" -ForegroundColor Green
-        }
-    }
     
     # Also create a detailed text report
     if (-not $NoFile) {
