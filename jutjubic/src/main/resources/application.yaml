@@ -28,7 +28,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: jutjubicisa@gmail.com
-    password: edqu lsoc jhaz cwde 
+    password: edqu lsoc jhaz cwde
     properties:
       mail:
         smtp:
@@ -40,8 +40,8 @@ spring:
     multipart:
       max-file-size: 200MB
       max-request-size: 210MB
-  
-  # DODAJ OVO - Timeout za async requeste
+
+  # Timeout za async requeste
   mvc:
     async:
       request-timeout: 600000  # 10 minuta
@@ -49,6 +49,13 @@ spring:
   sql:
     init:
       mode: never
+
+  # RabbitMQ konfiguracija
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 
 management:
   endpoints:

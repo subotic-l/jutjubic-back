@@ -31,6 +31,9 @@ public class VideoPost {
     @Column(nullable = false)
     private String videoUrl;
 
+    @Column
+    private String transcodedVideoUrl;
+
     @Column(nullable = false)
     private String thumbnailPath;
 
