@@ -1,11 +1,18 @@
 spring:
   application:
     name: jutjubic
+  
+  main:
+    allow-bean-definition-overriding: true
+  
+  docker:
+    compose:
+      enabled: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/jutjubic
-    username: postgres
-    password: root
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jutjubic}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -22,6 +29,23 @@ spring:
       hibernate:
         format_sql: true
         generate_statistics: true
+
+  # RabbitMQ konfiguracija za message queue (opciono)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    connection-timeout: 5000
+    requested-heartbeat: 30
+    # Brzo failovanje ako RabbitMQ nije dostupan
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        max-interval: 3000
+        multiplier: 1.5
 
   # Email konfiguracija
   mail:
@@ -48,19 +72,24 @@ spring:
 
   sql:
     init:
-      mode: never
+      mode: always
+      continue-on-error: true
 
+# Management endpoints za health checks i monitoring
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,prometheus,metrics,circuitbreakers,circuitbreakerevents
       base-path: /actuator
   endpoint:
     prometheus:
       enabled: true
     health:
+      # Prikazuje detalje zdravlja - dostupno load balanceru za health checks
       show-details: always
+      # Proverava komponente individualno
+      show-components: always
     metrics:
       enabled: true
   metrics:
@@ -72,9 +101,82 @@ management:
         http.server.requests: true
     tags:
       application: ${spring.application.name}
+      instance: ${INSTANCE_ID:${random.uuid}}
+  # Health check konfiguracija za klaster
   health:
+    # Proverava DB konekciju
     db:
       enabled: true
+    # Proverava RabbitMQ konekciju (graceful degradation ako nije dostupan)
+    rabbit:
+      enabled: true
+    # Ukupan health status zavisi od komponenti
+    defaults:
+      enabled: true
+    # Liveneness i readiness probes za Kubernetes/Docker
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+# Resilience4j konfiguracija za otpornost sistema
+resilience4j:
+  # Circuit breaker za zaštitu od kaskadnih padova
+  circuitbreaker:
+    instances:
+      # Circuit breaker za bazu podataka
+      database:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+        recordExceptions:
+          - org.springframework.dao.DataAccessException
+          - java.sql.SQLException
+      # Circuit breaker za message queue (graceful degradation)
+      messageQueue:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 15s
+        failureRateThreshold: 60
+        eventConsumerBufferSize: 10
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+  
+  # Retry mehanizam za privremene padove
+  retry:
+    instances:
+      # Retry za bazu podataka (npr. connection pool exhausted)
+      database:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.dao.TransientDataAccessException
+          - java.sql.SQLTransientException
+      # Retry za message queue
+      messageQueue:
+        maxAttempts: 2
+        waitDuration: 500ms
+        enableExponentialBackoff: false
+  
+  # Timeout za operacije
+  timelimiter:
+    instances:
+      database:
+        timeoutDuration: 5s
+        cancelRunningFuture: true
+      messageQueue:
+        timeoutDuration: 3s
+        cancelRunningFuture: true
 
 # JWT konfiguracija
 jwt:
