@@ -27,6 +27,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, 
                                    HttpServletResponse response, 
                                    FilterChain filterChain) throws ServletException, IOException {
+        
+        // Skip JWT validation for WebSocket handshake - it will be handled by WebSocket interceptors
+        String requestPath = request.getRequestURI();
+        if (requestPath != null && requestPath.startsWith("/ws-chat")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         try {
             String token = tokenUtils.getToken(request);
 

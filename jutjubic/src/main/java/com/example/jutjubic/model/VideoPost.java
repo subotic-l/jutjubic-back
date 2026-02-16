@@ -1,5 +1,6 @@
 package com.example.jutjubic.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -67,6 +68,7 @@ public class VideoPost {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"likedVideos", "password", "authorities", "hibernateLazyInitializer", "handler"})
     private User user;
 
     @ElementCollection
@@ -75,5 +77,6 @@ public class VideoPost {
     private Set<String> tags = new HashSet<>();
 
     @ManyToMany(mappedBy = "likedVideos")
+    @JsonIgnoreProperties({"likedVideos", "password", "authorities"})
     private Set<User> likedByUsers = new HashSet<>();
 }

@@ -43,20 +43,25 @@
           "mode": "multi"
         }
       },
+      "maxDataPoints": 300,
+      "interval": "2s",
       "targets": [
         {
           "expr": "hikaricp_connections_active{application=\"jutjubic\"}",
           "legendFormat": "Aktivne konekcije",
-          "refId": "A"
+          "refId": "A",
+          "interval": "2s"
         },
         {
           "expr": "hikaricp_connections_idle{application=\"jutjubic\"}",
           "legendFormat": "Idle konekcije",
-          "refId": "B"
+          "refId": "B",
+          "interval": "2s"
         }
       ],
       "title": "1. Broj aktivnih i idle konekcija ka bazi (24h)",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Aktivne = izvršavaju query. Idle = spremne u connection pool-u. Minimum idle je 5."
     },
     {
       "datasource": "Prometheus",
@@ -66,7 +71,7 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "max": 20,
+          "max": 50,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
@@ -77,11 +82,11 @@
               },
               {
                 "color": "yellow",
-                "value": 15
+                "value": 35
               },
               {
                 "color": "red",
-                "value": 18
+                "value": 45
               }
             ]
           },
@@ -109,16 +114,21 @@
         {
           "expr": "hikaricp_connections_active{application=\"jutjubic\"}",
           "legendFormat": "Aktivne",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "interval": "2s"
         },
         {
           "expr": "hikaricp_connections_idle{application=\"jutjubic\"}",
           "legendFormat": "Idle",
-          "refId": "B"
+          "refId": "B",
+          "instant": true,
+          "interval": "2s"
         }
       ],
-      "title": "Trenutno stanje konekcija",
-      "type": "gauge"
+      "title": "Trenutno stanje DB konekcija",
+      "type": "gauge",
+      "description": "HikariCP connection pool - aktivne izvršavaju query, idle čekaju u pool-u"
     },
     {
       "datasource": "Prometheus",
@@ -157,21 +167,26 @@
           "mode": "multi"
         }
       },
+      "maxDataPoints": 300,
+      "interval": "2s",
       "targets": [
         {
           "expr": "avg_over_time(system_cpu_usage{application=\"jutjubic\"}[5m])",
           "legendFormat": "Prosečno CPU (5 min)",
-          "refId": "A"
+          "refId": "A",
+          "interval": "2s"
         },
         {
           "expr": "avg_over_time(system_cpu_usage{application=\"jutjubic\"}[15m])",
           "legendFormat": "Prosečno CPU (15 min)",
-          "refId": "B"
+          "refId": "B",
+          "interval": "2s"
         },
         {
           "expr": "system_cpu_usage{application=\"jutjubic\"}",
           "legendFormat": "CPU trenutno",
-          "refId": "C"
+          "refId": "C",
+          "interval": "2s"
         }
       ],
       "title": "2. Prosečno zauzeće CPU u vremenskom intervalu (24h)",
@@ -228,7 +243,9 @@
         {
           "expr": "system_cpu_usage{application=\"jutjubic\"}",
           "legendFormat": "CPU",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "interval": "2s"
         }
       ],
       "title": "Trenutno CPU zauzeće",
@@ -246,8 +263,9 @@
             "axisPlacement": "auto",
             "drawStyle": "line",
             "fillOpacity": 30,
-            "lineWidth": 2,
-            "showPoints": "auto"
+            "lineWidth": 3,
+            "showPoints": "always",
+            "pointSize": 8
           },
           "unit": "short"
         }
@@ -261,23 +279,29 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": ["last", "max", "mean"],
+          "calcs": ["last", "max", "min"],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
+      "maxDataPoints": 300,
+      "interval": "2s",
       "targets": [
         {
           "expr": "active_users_current{application=\"jutjubic\"}",
           "legendFormat": "Aktivni korisnici",
-          "refId": "A"
+          "refId": "A",
+          "interval": "2s"
         }
       ],
       "title": "3. Broj trenutno aktivnih korisnika (24h)",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Korisnik je aktivan ako je napravio bilo koji HTTP zahtev u poslednjih 10 minuta. Osvežava se svakih 2s."
     },
     {
       "datasource": "Prometheus",
@@ -296,15 +320,15 @@
               },
               {
                 "color": "green",
-                "value": 10
+                "value": 1
               },
               {
                 "color": "yellow",
-                "value": 50
+                "value": 5
               },
               {
                 "color": "red",
-                "value": 100
+                "value": 10
               }
             ]
           },
@@ -326,20 +350,28 @@
           "fields": ""
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "text": {
+          "titleSize": 20,
+          "valueSize": 60
+        }
       },
+      "pluginVersion": "9.0.0",
       "targets": [
         {
           "expr": "active_users_current{application=\"jutjubic\"}",
           "legendFormat": "Aktivni",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "interval": "2s"
         }
       ],
       "title": "Trenutno aktivnih korisnika",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Instant query - prikazuje tačnu trenutnu vrednost bez cache-a. Aktivni = napravili HTTP zahtev u poslednjih 10 min"
     }
   ],
-  "refresh": "5s",
+  "refresh": "2s",
   "schemaVersion": 27,
   "style": "dark",
   "tags": ["jutjubic"],
@@ -356,5 +388,7 @@
   "timezone": "",
   "title": "Jutjubic - Monitoring (Zahtevi projekta)",
   "uid": "jutjubic-monitoring",
-  "version": 1
+  "version": 1,
+  "fiscalYearStartMonth": 0,
+  "liveNow": true
 }

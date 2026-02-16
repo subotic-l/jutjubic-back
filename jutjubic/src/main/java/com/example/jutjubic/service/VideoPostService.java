@@ -5,11 +5,14 @@ import com.example.jutjubic.dto.TileCoordinate;
 import com.example.jutjubic.dto.VideoPostRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
 import com.example.jutjubic.dto.StreamInfoResponse;
+import com.example.jutjubic.dto.UploadEventDto;
 import com.example.jutjubic.model.User;
 import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoPostRepository;
 import com.example.jutjubic.util.TileCalculator;
 import com.example.jutjubic.dto.TranscodingMessage;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -39,6 +42,7 @@ public class VideoPostService {
 
     private final VideoPostRepository videoPostRepository;
     private final DailyVideoViewService dailyVideoViewService;
+    private final UploadEventPublisher uploadEventPublisher;
     private final TranscodingProducer transcodingProducer;
     private static final String UPLOAD_DIR = "uploads";
     private static final String VIDEO_DIR = UPLOAD_DIR + "/videos";
@@ -54,6 +58,8 @@ public class VideoPostService {
 
     private static final int DEFAULT_TILE_ZOOM = BASE_TILE_ZOOM;
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
     @Transactional(rollbackFor = Exception.class)
     public VideoPostResponse createVideoPost(VideoPostRequest request, User user) throws IOException {
         if (request.getVideo() == null || request.getVideo().isEmpty()) {
@@ -106,7 +112,28 @@ public class VideoPostService {
             throw new IOException("Failed to upload files, rolling back...", e);
         }
 
+        // Publish upload event to RabbitMQ (JSON and Protobuf)
+        publishUploadEvent(videoPost);
+
         return mapToResponse(videoPost);
+    }
+
+    private void publishUploadEvent(VideoPost videoPost) {
+        try {
+            UploadEventDto event = new UploadEventDto(
+                videoPost.getId(),
+                videoPost.getTitle(),
+                videoPost.getUser().getActualUsername(),
+                videoPost.getVideoUrl(),
+                videoPost.getCreatedAt(),
+                videoPost.getLatitude(),
+                videoPost.getLongitude()
+            );
+            uploadEventPublisher.publishUploadEvent(event);
+        } catch (Exception e) {
+            // Ne bacaj exception, samo loguj - ne želimo da pad RabbitMQ-a spreči upload videa
+            // Log je već u UploadEventPublisher
+        }
     }
 
     private void createDirectories() throws IOException {
@@ -131,6 +158,9 @@ public class VideoPostService {
         return Files.readAllBytes(path);
     }
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
+    @Transactional(readOnly = true)
     public java.util.List<VideoPostResponse> getAllVideos() {
         return videoPostRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -138,6 +168,9 @@ public class VideoPostService {
                 .toList();
     }
 
+    @CircuitBreaker(name = "database")
+    @Retry(name = "database")
+    @Transactional(readOnly = true)
     public java.util.List<VideoPostResponse> getVideosForTiles(java.util.List<TileCoordinate> tiles) {
         if (tiles == null || tiles.isEmpty()) {
             return java.util.Collections.emptyList();
