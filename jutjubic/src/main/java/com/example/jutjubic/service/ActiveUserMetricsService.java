@@ -3,6 +3,8 @@ package com.example.jutjubic.service;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +15,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class ActiveUserMetricsService {
 
+    private static final Logger log = LoggerFactory.getLogger(ActiveUserMetricsService.class);
+    
     private final MeterRegistry meterRegistry;
     private final Map<String, Long> activeUsers = new ConcurrentHashMap<>();
     private final AtomicInteger activeUserCount = new AtomicInteger(0);
     private final Counter loginCounter;
     private final Counter logoutCounter;
 
-    private static final long ACTIVITY_THRESHOLD_MS = 2 * 60 * 1000; // 2 minuta
+    private static final long ACTIVITY_THRESHOLD_MS = 2 * 60 * 1000;
 
     public ActiveUserMetricsService(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
@@ -55,19 +59,33 @@ public class ActiveUserMetricsService {
         }
     }
 
-    @Scheduled(fixedRate = 60000) // svake minute
+    @Scheduled(fixedRate = 30000)
     public void cleanupInactiveUsers() {
         long currentTime = System.currentTimeMillis();
-        activeUsers.entrySet().removeIf(entry -> {
-            boolean isInactive = (currentTime - entry.getValue()) > ACTIVITY_THRESHOLD_MS;
-            if (isInactive) {
+        int removedCount = 0;
+        
+        for (Map.Entry<String, Long> entry : activeUsers.entrySet()) {
+            long inactiveTime = currentTime - entry.getValue();
+            if (inactiveTime > ACTIVITY_THRESHOLD_MS) {
+                activeUsers.remove(entry.getKey());
                 activeUserCount.decrementAndGet();
+                removedCount++;
+                log.info("Korisnik {} označen kao neaktivan nakon {} ms | Ukupno aktivnih: {}", 
+                    entry.getKey(), inactiveTime, activeUserCount.get());
             }
-            return isInactive;
-        });
+        }
+        
+        if (removedCount > 0) {
+            log.info("Cleanup završen: Uklonjeno {} neaktivnih korisnika | Preostalo aktivnih: {}", 
+                removedCount, activeUserCount.get());
+        }
     }
 
     public int getActiveUserCount() {
         return activeUserCount.get();
+    }
+    
+    public Map<String, Long> getActiveUsersDebugInfo() {
+        return new ConcurrentHashMap<>(activeUsers);
     }
 }

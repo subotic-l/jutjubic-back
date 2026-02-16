@@ -54,6 +54,8 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/health").permitAll()
+            .requestMatchers("/api/debug/**").permitAll()
+            .requestMatchers("/api/test/**").permitAll()
             .requestMatchers("/actuator/**").permitAll()
             .requestMatchers("/api/popular-videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
