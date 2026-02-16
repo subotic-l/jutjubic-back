@@ -59,7 +59,10 @@ public class WebSecurityConfig {
             .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/map/**").permitAll()
-            
+            .requestMatchers("/ws/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/watch-party").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/watch-party/**").permitAll()
+
             .anyRequest().authenticated()
         );
 
