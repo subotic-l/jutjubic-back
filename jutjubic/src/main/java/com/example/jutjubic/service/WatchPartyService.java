@@ -53,7 +53,6 @@ public class WatchPartyService {
 
         log.info("User {} joined watch party {}", user.getActualUsername(), roomCode);
 
-        // Notifikuj ostale učesnike
         WatchPartyMessage message = new WatchPartyMessage(
                 "USER_JOINED",
                 roomCode,
@@ -77,7 +76,6 @@ public class WatchPartyService {
 
         log.info("User {} left watch party {}", user.getActualUsername(), roomCode);
 
-        // Notifikuj ostale učesnike
         WatchPartyMessage message = new WatchPartyMessage(
                 "USER_LEFT",
                 roomCode,
@@ -94,7 +92,6 @@ public class WatchPartyService {
         WatchParty watchParty = watchPartyRepository.findByRoomCode(roomCode)
                 .orElseThrow(() -> new RuntimeException("Watch party not found"));
 
-        // Samo vlasnik može pokrenuti video
         if (!watchParty.getOwner().getId().equals(user.getId())) {
             throw new RuntimeException("Only the owner can start videos");
         }
@@ -107,7 +104,6 @@ public class WatchPartyService {
 
         log.info("Video {} started in watch party {} by owner {}", videoId, roomCode, user.getActualUsername());
 
-        // Notifikuj sve učesnike da je video pokrenut
         WatchPartyMessage message = new WatchPartyMessage(
                 "VIDEO_STARTED",
                 roomCode,
@@ -124,7 +120,6 @@ public class WatchPartyService {
         WatchParty watchParty = watchPartyRepository.findByRoomCode(roomCode)
                 .orElseThrow(() -> new RuntimeException("Watch party not found"));
 
-        // Samo vlasnik može zatvoriti sobu
         if (!watchParty.getOwner().getId().equals(user.getId())) {
             throw new RuntimeException("Only the owner can close the watch party");
         }
@@ -134,7 +129,6 @@ public class WatchPartyService {
 
         log.info("Watch party {} closed by owner {}", roomCode, user.getActualUsername());
 
-        // Notifikuj sve učesnike
         WatchPartyMessage message = new WatchPartyMessage(
                 "PARTY_CLOSED",
                 roomCode,

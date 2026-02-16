@@ -34,7 +34,6 @@ public class TranscodingConsumer {
             log.info("[{}] Received transcoding task for video ID: {}", consumerName, message.getVideoId());
             log.info("[{}] Input: {}, Output: {}", consumerName, message.getOriginalVideoPath(), message.getOutputVideoPath());
 
-            // Pokreni FFmpeg transcoding
             boolean success = ffmpegService.transcodeVideo(
                     message.getOriginalVideoPath(),
                     message.getOutputVideoPath(),
@@ -44,16 +43,13 @@ public class TranscodingConsumer {
             );
 
             if (success) {
-                // Ažuriraj VideoPost sa putanjom do transkodiranog videa
                 updateVideoPostWithTranscodedPath(message.getVideoId(), message.getOutputVideoPath());
                 log.info("[{}] Transcoding completed successfully for video ID: {}", consumerName, message.getVideoId());
 
-                // ACKNOWLEDGE - poruka je uspešno obrađena
                 channel.basicAck(deliveryTag, false);
             } else {
                 log.error("[{}] Transcoding failed for video ID: {}", consumerName, message.getVideoId());
 
-                // REJECT - poruka nije uspešno obrađena, ne vraćaj u queue
                 channel.basicReject(deliveryTag, false);
             }
 
@@ -61,7 +57,6 @@ public class TranscodingConsumer {
             log.error("Error processing transcoding task: {}", e.getMessage(), e);
 
             try {
-                // REJECT - greška pri obradi, ne vraćaj u queue
                 channel.basicReject(deliveryTag, false);
             } catch (IOException ioException) {
                 log.error("Error rejecting message: {}", ioException.getMessage());

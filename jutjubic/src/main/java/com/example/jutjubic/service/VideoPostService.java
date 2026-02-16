@@ -377,11 +377,9 @@ public class VideoPostService {
 
     private void sendToTranscodingQueue(VideoPost videoPost) {
         try {
-            // Kreiraj putanju za transcoded video (dodaje _720p.mp4)
             String originalPath = videoPost.getVideoUrl();
             String transcodedPath = originalPath.replace(".mp4", "_720p.mp4");
 
-            // Kreiraj poruku
             TranscodingMessage message = new TranscodingMessage(
                     videoPost.getId(),
                     originalPath,
@@ -391,13 +389,11 @@ public class VideoPostService {
                     "libx264"       // H.264 codec
             );
 
-            // Šalji u RabbitMQ queue
             transcodingProducer.sendTranscodingTask(message);
 
             log.info("Sent video {} to transcoding queue", videoPost.getId());
         } catch (Exception e) {
             log.error("Failed to send video {} to transcoding queue: {}", videoPost.getId(), e.getMessage(), e);
-            // Ne bacamo exception - video je uspešno uploadovan, transcoding će biti ponovljen kasnije
         }
     }
 }

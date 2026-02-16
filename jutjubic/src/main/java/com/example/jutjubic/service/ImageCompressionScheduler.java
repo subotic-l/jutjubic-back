@@ -28,10 +28,8 @@ public class ImageCompressionScheduler {
     public void compressOldThumbnails() {
         log.info("Starting scheduled thumbnail compression task...");
 
-        // Datum pre 30 dana
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
 
-        // Pronađi sve video postove starije od 30 dana bez kompresovanih thumbnails
         List<VideoPost> videosToCompress = videoPostRepository.findAll().stream()
                 .filter(video -> video.getCreatedAt().isBefore(thirtyDaysAgo))
                 .filter(video -> video.getCompressedThumbnailPath() == null)

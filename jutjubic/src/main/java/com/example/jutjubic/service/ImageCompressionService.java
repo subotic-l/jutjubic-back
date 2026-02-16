@@ -25,7 +25,6 @@ public class ImageCompressionService {
      */
     public String compressImage(String originalPath) {
         try {
-            // Proveri da li je putanja null ili prazna
             if (originalPath == null || originalPath.isEmpty()) {
                 log.warn("Original path is null or empty, skipping compression");
                 return null;
@@ -33,31 +32,26 @@ public class ImageCompressionService {
 
             Path originalFilePath = Paths.get(originalPath);
 
-            // Proveri da li original fajl postoji
             if (!Files.exists(originalFilePath)) {
                 log.warn("Original image does not exist, skipping: {}", originalPath);
                 return null;
             }
 
-            // Kreiraj putanju za kompresovanu sliku
             String compressedPath = originalPath.replaceFirst("(\\.[^.]+)$", COMPRESSED_SUFFIX);
 
-            // Ako kompresovana verzija već postoji, preskoči
             if (Files.exists(Paths.get(compressedPath))) {
                 log.info("Compressed image already exists: {}", compressedPath);
                 return compressedPath;
             }
 
-            // Kompresuj sliku
             Thumbnails.of(new File(originalPath))
-                    .scale(1.0) // Zadrži originalnu rezoluciju
+                    .scale(1.0)
                     .outputQuality(COMPRESSION_QUALITY)
                     .outputFormat("jpg")
                     .toFile(new File(compressedPath));
 
             log.info("Successfully compressed image: {} -> {}", originalPath, compressedPath);
 
-            // Logiraj veličine fajlova
             long originalSize = Files.size(originalFilePath);
             long compressedSize = Files.size(Paths.get(compressedPath));
             double savingsPercent = ((originalSize - compressedSize) * 100.0) / originalSize;
