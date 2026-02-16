@@ -10,9 +10,11 @@ import com.example.jutjubic.model.User;
 import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoPostRepository;
 import com.example.jutjubic.util.TileCalculator;
+import com.example.jutjubic.dto.TranscodingMessage;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,11 +37,13 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VideoPostService {
 
     private final VideoPostRepository videoPostRepository;
     private final DailyVideoViewService dailyVideoViewService;
     private final UploadEventPublisher uploadEventPublisher;
+    private final TranscodingProducer transcodingProducer;
     private static final String UPLOAD_DIR = "uploads";
     private static final String VIDEO_DIR = UPLOAD_DIR + "/videos";
     private static final String THUMBNAIL_DIR = UPLOAD_DIR + "/thumbnails";
@@ -98,6 +102,8 @@ public class VideoPostService {
         }
 
         videoPost = videoPostRepository.save(videoPost);
+
+        sendToTranscodingQueue(videoPost);
 
         try {
             uploadFile(request.getVideo(), videoPath);
@@ -339,7 +345,9 @@ public class VideoPostService {
                 videoPost.getDescription(),
                 videoPost.getTags(),
                 videoPost.getVideoUrl(),
+                videoPost.getTranscodedVideoUrl(),
                 videoPost.getThumbnailPath(),
+                videoPost.getCompressedThumbnailPath(),
                 videoPost.getCreatedAt(),
                 videoPost.getViews(),
                 videoPost.getLikes(),
@@ -398,5 +406,27 @@ public class VideoPostService {
         }
 
         videoPostRepository.saveAll(videos);
+    }
+
+    private void sendToTranscodingQueue(VideoPost videoPost) {
+        try {
+            String originalPath = videoPost.getVideoUrl();
+            String transcodedPath = originalPath.replace(".mp4", "_720p.mp4");
+
+            TranscodingMessage message = new TranscodingMessage(
+                    videoPost.getId(),
+                    originalPath,
+                    transcodedPath,
+                    "1280:720",     // 720p resolution
+                    "2000k",        // 2 Mbps bitrate
+                    "libx264"       // H.264 codec
+            );
+
+            transcodingProducer.sendTranscodingTask(message);
+
+            log.info("Sent video {} to transcoding queue", videoPost.getId());
+        } catch (Exception e) {
+            log.error("Failed to send video {} to transcoding queue: {}", videoPost.getId(), e.getMessage(), e);
+        }
     }
 }

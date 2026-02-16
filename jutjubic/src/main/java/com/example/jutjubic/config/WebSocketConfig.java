@@ -23,12 +23,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Enable simple in-memory message broker for broadcasting messages
-        // Clients subscribe to topics like: /topic/stream/{streamId}
         config.enableSimpleBroker("/topic");
 
-        // Messages from clients sent to @MessageMapping endpoints will have this prefix
-        // Example: client sends to /app/chat.send/123 -> routes to @MessageMapping("/chat.send/{streamId}")
         config.setApplicationDestinationPrefixes("/app");
     }
 
@@ -40,5 +36,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws-chat")
                 .setAllowedOriginPatterns("*") // Configure allowed origins based on your frontend deployment
                 .withSockJS(); // Enable SockJS fallback for browsers that don't support WebSocket
+        // WebSocket endpoint - klijenti se konektuju ovde
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins("http://localhost:4200", "http://localhost:3000")
+                .withSockJS();
     }
 }

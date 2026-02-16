@@ -1,10 +1,10 @@
 spring:
   application:
     name: jutjubic
-  
+
   main:
     allow-bean-definition-overriding: true
-  
+
   docker:
     compose:
       enabled: false
@@ -52,7 +52,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: jutjubicisa@gmail.com
-    password: edqu lsoc jhaz cwde 
+    password: edqu lsoc jhaz cwde
     properties:
       mail:
         smtp:
@@ -64,8 +64,8 @@ spring:
     multipart:
       max-file-size: 200MB
       max-request-size: 210MB
-  
-  # DODAJ OVO - Timeout za async requeste
+
+  # Timeout za async requeste
   mvc:
     async:
       request-timeout: 600000  # 10 minuta
@@ -149,7 +149,7 @@ resilience4j:
         eventConsumerBufferSize: 10
         ignoreExceptions:
           - java.lang.IllegalArgumentException
-  
+
   # Retry mehanizam za privremene padove
   retry:
     instances:
@@ -167,7 +167,7 @@ resilience4j:
         maxAttempts: 2
         waitDuration: 500ms
         enableExponentialBackoff: false
-  
+
   # Timeout za operacije
   timelimiter:
     instances:
