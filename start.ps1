@@ -6,7 +6,7 @@ Write-Host "  Starting Jutjubic with Consumer" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$jutjubicPath = "C:\Users\Aleksa\Documents\Faks\Semestar7\ISA\projekat\jutjubic-back\jutjubic"
+$jutjubicPath = "D:\Projects\jutjubic-back\jutjubic-back\jutjubic"
 
 # Check if docker-compose.yml exists
 if (-not (Test-Path "$jutjubicPath\docker-compose.yml")) {
@@ -23,8 +23,21 @@ Write-Host ""
 try {
     # Start all services
     docker-compose up -d --build
-    # docker cp src/main/resources/data.sql jutjubic-postgres:/tmp/data.sql
-    # docker exec -it jutjubic-postgres psql -U postgres -d jutjubic -f /tmp/data.sql
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host ""
+        Write-Host "Waiting for database to be ready..." -ForegroundColor Yellow
+        Start-Sleep -Seconds 5
+        
+        Write-Host "Clearing existing data from database..." -ForegroundColor Yellow
+        docker exec jutjubic-postgres psql -U postgres -d jutjubic -c "TRUNCATE TABLE video_tags, user_liked_videos, watch_party_participants, video_comments, watch_parties, video_posts, users RESTART IDENTITY CASCADE;" 2>$null
+        
+        Write-Host "Importing new data from data.sql..." -ForegroundColor Yellow
+        docker cp src/main/resources/data.sql jutjubic-postgres:/tmp/data.sql
+        docker exec jutjubic-postgres psql -U postgres -d jutjubic -f /tmp/data.sql
+        
+        Write-Host "Database populated successfully!" -ForegroundColor Green
+    }
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""
