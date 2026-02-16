@@ -27,6 +27,9 @@ public class DatabaseLoadTestController {
 
     @Autowired
     private VideoPostRepository videoPostRepository;
+    
+    @Autowired
+    private javax.sql.DataSource dataSource;
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
@@ -163,9 +166,98 @@ public class DatabaseLoadTestController {
             "db-load", "GET /api/test/db-load?threads=10&delayMs=1000 - Jednokratno paralelno opterećenje",
             "continuous-load", "GET /api/test/continuous-load?duration=30&threads=5 - Kontinuirano opterećenje u pozadini",
             "high-load", "GET /api/test/high-load?duration=10&requestsPerSecond=200 - Simulira 200+ zahteva/sekundi",
+            "slow-queries", "GET /api/test/slow-queries?connections=15&queryDuration=5 - Spori query-ji koji drže DB konekcije aktivnim",
             "info", "GET /api/test/info - Ova poruka"
         ));
         response.put("description", "Endpoint-i za testiranje DB konekcija i opterećenja sistema");
+        
+        return response;
+    }
+
+    /**
+     * Izvršava spore query-je koji zaista drže DB konekcije aktivnim
+     * GET /api/test/slow-queries?connections=15&queryDuration=5
+     * 
+     * Koristi pg_sleep() funkciju da zadrži konekciju aktivnom tokom celog trajanja query-ja.
+     * Ovo će omogućiti da vidite aktivne konekcije u Grafani.
+     * 
+     * @param connections broj paralelnih konekcija (max 40)
+     * @param queryDuration koliko sekundi svaki query treba da traje (max 30)
+     */
+    @GetMapping("/slow-queries")
+    public Map<String, Object> slowQueries(
+            @RequestParam(defaultValue = "15") int connections,
+            @RequestParam(defaultValue = "5") int queryDuration) {
+        
+        final int finalConnections = Math.min(connections, 40);
+        final int finalDuration = Math.min(queryDuration, 30);
+
+        log.info("Pokrećem {} sporih query-ja, svaki traje {} sekundi", finalConnections, finalDuration);
+
+        List<CompletableFuture<Long>> futures = new ArrayList<>();
+        long startTime = System.currentTimeMillis();
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger errorCount = new AtomicInteger(0);
+
+        for (int i = 0; i < finalConnections; i++) {
+            final int threadNum = i;
+            CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    log.info("[Thread {}] Pokrećem spor query (pg_sleep {}s)...", threadNum, finalDuration);
+                    
+                    // Izvršava query sa pg_sleep() koji drži DB konekciju aktivnom
+                    try (var connection = dataSource.getConnection();
+                         var statement = connection.createStatement();
+                         var resultSet = statement.executeQuery(
+                             "SELECT pg_sleep(" + finalDuration + "), COUNT(*) FROM users")) {
+                        
+                        if (resultSet.next()) {
+                            long count = resultSet.getLong(2);
+                            log.info("[Thread {}] Query završen, pronađeno {} korisnika", threadNum, count);
+                            successCount.incrementAndGet();
+                            return count;
+                        }
+                    }
+                    
+                    return 0L;
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                    log.error("[Thread {}] Greška u spором query-ju: {}", threadNum, e.getMessage());
+                    return -1L;
+                }
+            }, executorService);
+            
+            futures.add(future);
+            
+            // Malo pauziraj između pokretanja thread-ova da se jasnije vidi na grafu
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        // Ne čekaj ovde - vrati odgovor odmah
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenRun(() -> {
+                long totalTime = System.currentTimeMillis() - startTime;
+                log.info("Svi spori query-ji završeni za {}ms. Uspešno: {}, Greške: {}", 
+                    totalTime, successCount.get(), errorCount.get());
+            });
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "running");
+        response.put("connections", finalConnections);
+        response.put("queryDurationSeconds", finalDuration);
+        response.put("expectedTotalDurationSeconds", finalDuration + 2);
+        response.put("message", String.format(
+            "Pokrenuto %d sporih query-ja sa pg_sleep(%d). " +
+            "DB konekcije će biti aktivne ~%d sekundi. " +
+            "Proverite Grafana dashboard za metrike aktivnih konekcija!",
+            finalConnections, finalDuration, finalDuration
+        ));
+        response.put("grafanaUrl", "http://localhost:3000/d/jutjubic-monitoring");
         
         return response;
     }
