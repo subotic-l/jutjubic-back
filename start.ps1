@@ -6,7 +6,7 @@ Write-Host "  Starting Jutjubic with Consumer" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$jutjubicPath = "D:\Projects\jutjubic-back\jutjubic-back\jutjubic"
+$jutjubicPath = "C:\Users\Aleksa\Documents\Faks\Semestar7\ISA\projekat\jutjubic-back\jutjubic"
 
 # Check if docker-compose.yml exists
 if (-not (Test-Path "$jutjubicPath\docker-compose.yml")) {
