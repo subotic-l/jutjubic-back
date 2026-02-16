@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -46,12 +47,19 @@ public class WebSecurityConfig {
     private UserActivityFilter userActivityFilter;
 
     @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // Completely bypass Spring Security for WebSocket endpoints
+        return (web) -> web.ignoring().requestMatchers("/ws-chat/**");
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint));
 
         http.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/ws-chat/**").permitAll()  // FIRST - Allow all WebSocket endpoints without auth
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/health").permitAll()
             .requestMatchers("/api/debug/**").permitAll()
