@@ -276,9 +276,9 @@ INSERT INTO daily_video_views (video_id, view_date, view_count) VALUES
 --Komanda za pokretanje ETL pipeline-a:
 --Invoke-RestMethod -Uri http://localhost/api/popular-videos/run-etl -Method POST
 
-INSERT INTO public.popularity_reports(
-	id, first_video_score, report_date, second_video_score, third_video_score, first_video_id, second_video_id, third_video_id)
-	VALUES (1, 2170, NOW(), 1780, 1400, 4, 2, 1);
+-- INSERT INTO public.popularity_reports(
+-- 	id, first_video_score, report_date, second_video_score, third_video_score, first_video_id, second_video_id, third_video_id)
+-- 	VALUES (1, 2170, NOW(), 1780, 1400, 4, 2, 1);
 
 
 SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));

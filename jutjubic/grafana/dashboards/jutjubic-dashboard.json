@@ -47,14 +47,14 @@
       "interval": "2s",
       "targets": [
         {
-          "expr": "hikaricp_connections_active{application=\"jutjubic\"}",
-          "legendFormat": "Aktivne konekcije",
+          "expr": "sum(hikaricp_connections_active{application=\"jutjubic\"})",
+          "legendFormat": "Aktivne konekcije (ukupno)",
           "refId": "A",
           "interval": "2s"
         },
         {
-          "expr": "hikaricp_connections_idle{application=\"jutjubic\"}",
-          "legendFormat": "Idle konekcije",
+          "expr": "sum(hikaricp_connections_idle{application=\"jutjubic\"})",
+          "legendFormat": "Idle konekcije (ukupno)",
           "refId": "B",
           "interval": "2s"
         }
@@ -112,15 +112,15 @@
       },
       "targets": [
         {
-          "expr": "hikaricp_connections_active{application=\"jutjubic\"}",
-          "legendFormat": "Aktivne",
+          "expr": "sum(hikaricp_connections_active{application=\"jutjubic\"})",
+          "legendFormat": "Aktivne (ukupno)",
           "refId": "A",
           "instant": true,
           "interval": "2s"
         },
         {
-          "expr": "hikaricp_connections_idle{application=\"jutjubic\"}",
-          "legendFormat": "Idle",
+          "expr": "sum(hikaricp_connections_idle{application=\"jutjubic\"})",
+          "legendFormat": "Idle (ukupno)",
           "refId": "B",
           "instant": true,
           "interval": "2s"
@@ -171,20 +171,20 @@
       "interval": "2s",
       "targets": [
         {
-          "expr": "avg_over_time(system_cpu_usage{application=\"jutjubic\"}[5m])",
+          "expr": "avg(avg_over_time(system_cpu_usage{application=\"jutjubic\"}[5m]))",
           "legendFormat": "Prosečno CPU (5 min)",
           "refId": "A",
           "interval": "2s"
         },
         {
-          "expr": "avg_over_time(system_cpu_usage{application=\"jutjubic\"}[15m])",
+          "expr": "avg(avg_over_time(system_cpu_usage{application=\"jutjubic\"}[15m]))",
           "legendFormat": "Prosečno CPU (15 min)",
           "refId": "B",
           "interval": "2s"
         },
         {
-          "expr": "system_cpu_usage{application=\"jutjubic\"}",
-          "legendFormat": "CPU trenutno",
+          "expr": "avg(system_cpu_usage{application=\"jutjubic\"})",
+          "legendFormat": "CPU trenutno (prosek)",
           "refId": "C",
           "interval": "2s"
         }
@@ -241,8 +241,8 @@
       },
       "targets": [
         {
-          "expr": "system_cpu_usage{application=\"jutjubic\"}",
-          "legendFormat": "CPU",
+          "expr": "avg(system_cpu_usage{application=\"jutjubic\"})",
+          "legendFormat": "CPU (prosek)",
           "refId": "A",
           "instant": true,
           "interval": "2s"
@@ -293,7 +293,7 @@
       "interval": "2s",
       "targets": [
         {
-          "expr": "active_users_current{application=\"jutjubic\"}",
+          "expr": "max(active_users_current{application=\"jutjubic\"})",
           "legendFormat": "Aktivni korisnici",
           "refId": "A",
           "interval": "2s"
@@ -359,7 +359,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "active_users_current{application=\"jutjubic\"}",
+          "expr": "max(active_users_current{application=\"jutjubic\"})",
           "legendFormat": "Aktivni",
           "refId": "A",
           "instant": true,
