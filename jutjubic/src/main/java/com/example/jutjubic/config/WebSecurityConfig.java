@@ -42,6 +42,9 @@ public class WebSecurityConfig {
     @Autowired
     private TokenUtils tokenUtils;
 
+    @Autowired
+    private UserActivityFilter userActivityFilter;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -51,6 +54,8 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/health").permitAll()
+            .requestMatchers("/actuator/**").permitAll()
+            .requestMatchers("/api/popular-videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/map/**").permitAll()
@@ -62,6 +67,7 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable());
 
         http.addFilterBefore(new TokenAuthenticationFilter(tokenUtils, customUserDetailsService), BasicAuthenticationFilter.class);
+        http.addFilterAfter(userActivityFilter, TokenAuthenticationFilter.class);
 
         return http.build();
     }

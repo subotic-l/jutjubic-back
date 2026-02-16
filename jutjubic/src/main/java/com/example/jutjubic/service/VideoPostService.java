@@ -4,6 +4,7 @@ import com.example.jutjubic.dto.LikeResponse;
 import com.example.jutjubic.dto.TileCoordinate;
 import com.example.jutjubic.dto.VideoPostRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
+import com.example.jutjubic.dto.StreamInfoResponse;
 import com.example.jutjubic.model.User;
 import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoPostRepository;
@@ -34,6 +35,7 @@ import java.util.UUID;
 public class VideoPostService {
 
     private final VideoPostRepository videoPostRepository;
+    private final DailyVideoViewService dailyVideoViewService;
     private static final String UPLOAD_DIR = "uploads";
     private static final String VIDEO_DIR = UPLOAD_DIR + "/videos";
     private static final String THUMBNAIL_DIR = UPLOAD_DIR + "/thumbnails";
@@ -75,6 +77,8 @@ public class VideoPostService {
         videoPost.setUser(user);
         videoPost.setVideoUrl(videoPath.toString());
         videoPost.setThumbnailPath(thumbnailPath.toString());
+        videoPost.setScheduledReleaseTime(request.getScheduledReleaseTime());
+        videoPost.setVideoDurationSeconds(request.getVideoDurationSeconds());
         
         if (request.getLatitude() != null && request.getLongitude() != null) {
             TileCoordinate tile = TileCalculator.getTileForLocation(
@@ -201,11 +205,59 @@ public class VideoPostService {
 
     @Transactional
     public VideoPostResponse getVideoById(Long id) {
-        videoPostRepository.incrementViews(id);
         VideoPost videoPost = videoPostRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
         
+        videoPostRepository.incrementViews(id);
+        dailyVideoViewService.recordView(id); // Beleži dnevni pregled
         return mapToResponse(videoPost);
+    }
+
+    public StreamInfoResponse getStreamInfo(Long id) {
+        VideoPost videoPost = videoPostRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
+        
+        LocalDateTime now = LocalDateTime.now();
+        StreamInfoResponse response = new StreamInfoResponse();
+        response.setServerTime(now);
+        
+        if (videoPost.getScheduledReleaseTime() == null) {
+            response.setScheduled(false);
+            response.setHasStarted(true);
+            response.setHasEnded(false);
+            response.setCurrentOffsetSeconds(0L);
+            response.setVideoDurationSeconds(videoPost.getVideoDurationSeconds());
+            return response;
+        }
+        
+        response.setScheduled(true);
+        response.setScheduledReleaseTime(videoPost.getScheduledReleaseTime());
+        response.setVideoDurationSeconds(videoPost.getVideoDurationSeconds());
+        
+        if (now.isBefore(videoPost.getScheduledReleaseTime())) {
+            response.setHasStarted(false);
+            response.setHasEnded(false);
+            response.setCurrentOffsetSeconds(0L);
+            return response;
+        }
+        
+        long offsetSeconds = java.time.Duration.between(
+            videoPost.getScheduledReleaseTime(), 
+            now
+        ).getSeconds();
+        
+        response.setHasStarted(true);
+        response.setCurrentOffsetSeconds(offsetSeconds);
+        
+        if (videoPost.getVideoDurationSeconds() != null && 
+            offsetSeconds >= videoPost.getVideoDurationSeconds()) {
+            response.setHasEnded(true);
+            response.setCurrentOffsetSeconds(videoPost.getVideoDurationSeconds());
+        } else {
+            response.setHasEnded(false);
+        }
+        
+        return response;
     }
 
     @Transactional
@@ -261,7 +313,9 @@ public class VideoPostService {
                 videoPost.getLongitude(),
                 videoPost.getLatitude(),
                 videoPost.getUser().getActualUsername(),
-                likedByCurrentUser
+                likedByCurrentUser,
+                videoPost.getScheduledReleaseTime(),
+                videoPost.getVideoDurationSeconds()
         );
     }
 

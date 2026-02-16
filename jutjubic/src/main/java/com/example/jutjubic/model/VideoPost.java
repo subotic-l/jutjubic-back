@@ -50,6 +50,12 @@ public class VideoPost {
     private Integer tileY;
     private Integer tileZoom;
 
+    // Scheduled streaming fields
+    private LocalDateTime scheduledReleaseTime;
+
+    @Column(nullable = true)
+    private Long videoDurationSeconds;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
