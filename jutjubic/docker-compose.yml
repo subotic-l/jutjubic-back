@@ -76,8 +76,8 @@ services:
   # Ova replika radi na portu 8081 interno
   app-1:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: jutjubic/Dockerfile
     container_name: jutjubic-app-1
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/jutjubic
@@ -112,8 +112,8 @@ services:
   # Ova replika radi na portu 8082 interno
   app-2:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: jutjubic/Dockerfile
     container_name: jutjubic-app-2
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/jutjubic

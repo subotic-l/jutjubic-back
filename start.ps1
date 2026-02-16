@@ -23,6 +23,8 @@ Write-Host ""
 try {
     # Start all services
     docker-compose up -d --build
+    docker cp src/main/resources/data.sql jutjubic-postgres:/tmp/data.sql
+    docker exec -it jutjubic-postgres psql -U postgres -d jutjubic -f /tmp/data.sql
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""

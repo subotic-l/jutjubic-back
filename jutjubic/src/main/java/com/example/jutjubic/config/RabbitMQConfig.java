@@ -33,7 +33,23 @@ public class RabbitMQConfig {
     private String password;
 
     /**
-     * Queue za video event notifikacije
+     * Queue za video event notifikacije (JSON format)
+     */
+    @Bean
+    public Queue uploadJsonQueue() {
+        return new Queue("upload.json", true); // durable queue
+    }
+
+    /**
+     * Queue za video event notifikacije (Protobuf format)
+     */
+    @Bean
+    public Queue uploadProtoQueue() {
+        return new Queue("upload.proto", true); // durable queue
+    }
+
+    /**
+     * Legacy queue za video events (zadržano zbog kompatibilnosti)
      */
     @Bean
     public Queue videoEventsQueue() {

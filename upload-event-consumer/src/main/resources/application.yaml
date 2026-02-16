@@ -10,6 +10,9 @@ spring:
     
   jackson:
     default-property-inclusion: non_null
+  
+  security:
+    enabled: false
 
 server:
   port: 8081

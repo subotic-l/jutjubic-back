@@ -36,9 +36,9 @@ public class JsonUploadEventListener {
             // Record metrics
             benchmarkService.recordJsonMetrics(deserializeTime, messageSize);
             
-            logger.debug("Received JSON upload event: title={}, author={}, size={}, duration={}, uploadedAt={}, deserializeTime={}ns, messageSize={}bytes",
-                    event.getTitle(), event.getAuthor(), event.getSize(), event.getDuration(), 
-                    event.getUploadedAt(), deserializeTime, messageSize);
+            logger.debug("Received JSON upload event: videoId={}, title={}, username={}, videoUrl={}, uploadedAt={}, latitude={}, longitude={}, deserializeTime={}ns, messageSize={}bytes",
+                    event.getVideoId(), event.getTitle(), event.getUsername(), event.getVideoUrl(), 
+                    event.getUploadedAt(), event.getLatitude(), event.getLongitude(), deserializeTime, messageSize);
             
         } catch (Exception e) {
             logger.error("Error processing JSON message", e);

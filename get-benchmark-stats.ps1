@@ -2,7 +2,7 @@
 # Script to fetch and display benchmark statistics from upload-event-consumer
 
 param(
-    [string]$Url = "http://localhost:8082/benchmark-results",
+    [string]$Url = "http://localhost:8083/benchmark-results",
     [string]$OutputFile = "benchmark-stats.csv",
     [switch]$JsonOutput,
     [switch]$NoFile
@@ -32,14 +32,13 @@ try {
     Write-Host "  Average Message Size:     $($response.protobuf.avgSizeBytes) bytes"
     Write-Host ""
     
-    # Calculate comparison
-    if ($response.json.avgDeserializeNs -gt 0 -and $response.protobuf.avgDeserializeNs -gt 0) {
-        $timeRatio = [Math]::Round($response.json.avgDeserializeNs / $response.protobuf.avgDeserializeNs, 2)
-        $sizeRatio = [Math]::Round($response.json.avgSizeBytes / $response.protobuf.avgSizeBytes, 2)
-        
+    # Display comparison stats from backend
+    if ($response.comparison) {
         Write-Host "--- Performance Comparison ---" -ForegroundColor Green
-        Write-Host "  Protobuf is ${timeRatio}x faster in deserialization"
-        Write-Host "  Protobuf messages are ${sizeRatio}x smaller in size"
+        Write-Host "  Protobuf is $($response.comparison.speedRatio)x faster in deserialization"
+        Write-Host "  Protobuf messages are $($response.comparison.sizeRatio)x smaller in size"
+        Write-Host "  Speed improvement: $($response.comparison.speedupPercent)%"
+        Write-Host "  Size reduction: $($response.comparison.compressionPercent)%"
         Write-Host ""
     }
     
@@ -54,6 +53,7 @@ try {
                 timestamp = $timestamp
                 json = $response.json
                 protobuf = $response.protobuf
+                comparison = $response.comparison
             } | ConvertTo-Json -Depth 3
             
             $outputData | Out-File -FilePath $jsonFile -Encoding UTF8
@@ -98,21 +98,16 @@ Performance Comparison
 ----------------------
 "@
         
-        if ($response.json.avgDeserializeNs -gt 0 -and $response.protobuf.avgDeserializeNs -gt 0) {
-            $timeRatio = [Math]::Round($response.json.avgDeserializeNs / $response.protobuf.avgDeserializeNs, 2)
-            $sizeRatio = [Math]::Round($response.json.avgSizeBytes / $response.protobuf.avgSizeBytes, 2)
-            $speedupPercent = [Math]::Round((($response.json.avgDeserializeNs - $response.protobuf.avgDeserializeNs) / $response.json.avgDeserializeNs) * 100, 1)
-            $compressionPercent = [Math]::Round((($response.json.avgSizeBytes - $response.protobuf.avgSizeBytes) / $response.json.avgSizeBytes) * 100, 1)
-            
+        if ($response.comparison -and $response.comparison.speedRatio -gt 0) {
             $reportContent += @"
-Deserialization Speed: Protobuf is ${timeRatio}x faster (${speedupPercent}% improvement)
-Message Size:          Protobuf is ${sizeRatio}x smaller (${compressionPercent}% reduction)
+Deserialization Speed: Protobuf is $($response.comparison.speedRatio)x faster ($($response.comparison.speedupPercent)% improvement)
+Message Size:          Protobuf is $($response.comparison.sizeRatio)x smaller ($($response.comparison.compressionPercent)% reduction)
 
 Conclusion
 ----------
 Protobuf provides significant performance benefits:
-- Faster deserialization by ${speedupPercent}%
-- Smaller message size by ${compressionPercent}%
+- Faster deserialization by $($response.comparison.speedupPercent)%
+- Smaller message size by $($response.comparison.compressionPercent)%
 "@
         }
         else {

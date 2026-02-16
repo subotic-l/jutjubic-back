@@ -1,7 +1,7 @@
 package com.example.uploadeventconsumer.listener;
 
 import com.example.uploadeventconsumer.service.BenchmarkService;
-import com.jutjubic.common.proto.UploadEventProto;
+import com.example.proto.UploadEventProto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -33,8 +33,8 @@ public class ProtobufUploadEventListener {
             // Record metrics
             benchmarkService.recordProtobufMetrics(deserializeTime, messageSize);
             
-            logger.debug("Received Protobuf upload event: title={}, author={}, size={}, duration={}, uploadedAt={}, deserializeTime={}ns, messageSize={}bytes",
-                    event.getTitle(), event.getAuthor(), event.getSize(), event.getDuration(), 
+            logger.debug("Received Protobuf upload event: videoId={}, title={}, username={}, uploadedAt={}, deserializeTime={}ns, messageSize={}bytes",
+                    event.getVideoId(), event.getTitle(), event.getUsername(), 
                     event.getUploadedAt(), deserializeTime, messageSize);
             
         } catch (Exception e) {

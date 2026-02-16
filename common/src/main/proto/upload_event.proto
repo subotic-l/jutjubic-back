@@ -2,13 +2,15 @@ syntax = "proto3";
 
 package upload;
 
-option java_package = "com.jutjubic.common.proto";
+option java_package = "com.example.proto";
 option java_outer_classname = "UploadEventProto";
 
 message UploadEvent {
-  string title = 1;
-  string author = 2;
-  int64 size = 3;
-  int64 duration = 4;
+  int64 videoId = 1;
+  string title = 2;
+  string username = 3;
+  string videoUrl = 4;
   int64 uploadedAt = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
 }

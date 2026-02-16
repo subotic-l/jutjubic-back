@@ -5,6 +5,7 @@ import com.example.jutjubic.dto.TileCoordinate;
 import com.example.jutjubic.dto.VideoPostRequest;
 import com.example.jutjubic.dto.VideoPostResponse;
 import com.example.jutjubic.dto.StreamInfoResponse;
+import com.example.jutjubic.dto.UploadEventDto;
 import com.example.jutjubic.model.User;
 import com.example.jutjubic.model.VideoPost;
 import com.example.jutjubic.repository.VideoPostRepository;
@@ -38,6 +39,7 @@ public class VideoPostService {
 
     private final VideoPostRepository videoPostRepository;
     private final DailyVideoViewService dailyVideoViewService;
+    private final UploadEventPublisher uploadEventPublisher;
     private static final String UPLOAD_DIR = "uploads";
     private static final String VIDEO_DIR = UPLOAD_DIR + "/videos";
     private static final String THUMBNAIL_DIR = UPLOAD_DIR + "/thumbnails";
@@ -104,7 +106,28 @@ public class VideoPostService {
             throw new IOException("Failed to upload files, rolling back...", e);
         }
 
+        // Publish upload event to RabbitMQ (JSON and Protobuf)
+        publishUploadEvent(videoPost);
+
         return mapToResponse(videoPost);
+    }
+
+    private void publishUploadEvent(VideoPost videoPost) {
+        try {
+            UploadEventDto event = new UploadEventDto(
+                videoPost.getId(),
+                videoPost.getTitle(),
+                videoPost.getUser().getActualUsername(),
+                videoPost.getVideoUrl(),
+                videoPost.getCreatedAt(),
+                videoPost.getLatitude(),
+                videoPost.getLongitude()
+            );
+            uploadEventPublisher.publishUploadEvent(event);
+        } catch (Exception e) {
+            // Ne bacaj exception, samo loguj - ne želimo da pad RabbitMQ-a spreči upload videa
+            // Log je već u UploadEventPublisher
+        }
     }
 
     private void createDirectories() throws IOException {
