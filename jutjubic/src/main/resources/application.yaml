@@ -24,11 +24,15 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false
     properties:
       hibernate:
         format_sql: true
         generate_statistics: true
+
+  sql:
+    init:
+      mode: never
 
   # RabbitMQ konfiguracija za message queue (opciono)
   rabbitmq:
@@ -70,10 +74,6 @@ spring:
     async:
       request-timeout: 600000  # 10 minuta
 
-  sql:
-    init:
-      mode: always
-      continue-on-error: true
 
 # Management endpoints za health checks i monitoring
 management:
