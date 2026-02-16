@@ -314,6 +314,7 @@ public class VideoPostService {
                 videoPost.getVideoUrl(),
                 videoPost.getTranscodedVideoUrl(),
                 videoPost.getThumbnailPath(),
+                videoPost.getCompressedThumbnailPath(),
                 videoPost.getCreatedAt(),
                 videoPost.getViews(),
                 videoPost.getLikes(),

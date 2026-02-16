@@ -7,6 +7,7 @@ import com.example.jutjubic.dto.StreamInfoResponse;
 import com.example.jutjubic.model.User;
 import com.example.jutjubic.service.UserService;
 import com.example.jutjubic.service.VideoPostService;
+import com.example.jutjubic.service.ImageCompressionScheduler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ public class VideoPostController {
 
     private final VideoPostService videoPostService;
     private final UserService userService;
+    private final ImageCompressionScheduler imageCompressionScheduler;
 
     @GetMapping
     public ResponseEntity<List<VideoPostResponse>> getAllVideos() {
@@ -112,5 +114,11 @@ public class VideoPostController {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/compress-thumbnails")
+    public ResponseEntity<String> compressThumbnails() {
+        imageCompressionScheduler.compressAllOldThumbnailsManually();
+        return ResponseEntity.ok("Thumbnail compression started");
     }
 }

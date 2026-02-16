@@ -37,6 +37,12 @@ public class VideoPost {
     @Column(nullable = false)
     private String thumbnailPath;
 
+    @Column
+    private String compressedThumbnailPath;
+
+    @Column
+    private LocalDateTime thumbnailCompressedAt;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
