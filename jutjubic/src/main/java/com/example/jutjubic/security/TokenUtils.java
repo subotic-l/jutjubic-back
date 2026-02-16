@@ -71,10 +71,17 @@ public class TokenUtils {
     }
 
     public String getToken(HttpServletRequest request) {
+        // First, try to get token from Authorization header
         String authHeader = request.getHeader(AUTH_HEADER);
         
         if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
             return authHeader.substring(BEARER_PREFIX.length());
+        }
+        
+        // If not found in header, try to get from query parameter (for WebSocket)
+        String tokenParam = request.getParameter("token");
+        if (tokenParam != null && !tokenParam.isEmpty()) {
+            return tokenParam;
         }
         
         return null;

@@ -1,15 +1,22 @@
-TRUNCATE TABLE
-    video_tags,
-    video_posts,
-    video_comment,
-	user_liked_videos,
-	login_attempts,
-	verification_tokens,
-    users,
-    daily_video_views,
-    popularity_reports
-RESTART IDENTITY
-CASCADE;
+-- Brišemo podatke samo ako tabele postoje
+DO $$ 
+BEGIN
+    -- Prvo proveravamo da li tabele postoje pre TRUNCATE
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users') THEN
+        TRUNCATE TABLE
+            video_tags,
+            video_posts,
+            video_comment,
+            user_liked_videos,
+            login_attempts,
+            verification_tokens,
+            users,
+            daily_video_views,
+            popularity_reports
+        RESTART IDENTITY
+        CASCADE;
+    END IF;
+END $$;
 
 INSERT INTO public.users(
 	account_non_locked, address, created_at, email, enabled, first_name, last_name, password, updated_at, username)
